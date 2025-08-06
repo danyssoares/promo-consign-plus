@@ -1,46 +1,52 @@
 import { ReactNode } from "react";
+import { Home, FileText, CreditCard, HelpCircle } from "lucide-react";
 
 interface MobileLayoutProps {
   children: ReactNode;
   showTabbar?: boolean;
   currentTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export const MobileLayout = ({ children, showTabbar = false, currentTab }: MobileLayoutProps) => {
+export const MobileLayout = ({ children, showTabbar = false, currentTab, onTabChange }: MobileLayoutProps) => {
   return (
     <div className="min-h-screen bg-background max-w-sm mx-auto relative">
       <div className={showTabbar ? "pb-20" : ""}>{children}</div>
-      {showTabbar && <Tabbar currentTab={currentTab} />}
+      {showTabbar && <Tabbar currentTab={currentTab} onTabChange={onTabChange} />}
     </div>
   );
 };
 
-const Tabbar = ({ currentTab }: { currentTab?: string }) => {
+const Tabbar = ({ currentTab, onTabChange }: { currentTab?: string; onTabChange?: (tab: string) => void }) => {
   const tabs = [
-    { id: "home", label: "Início", icon: "🏠" },
-    { id: "extrato", label: "Extrato", icon: "📊" },
-    { id: "cartoes", label: "Cartões", icon: "💳" },
-    { id: "suporte", label: "Suporte", icon: "❓" },
+    { id: "home", label: "Início", icon: Home },
+    { id: "extrato", label: "Extrato", icon: FileText },
+    { id: "cartoes", label: "Cartões", icon: CreditCard },
+    { id: "suporte", label: "Suporte", icon: HelpCircle },
   ];
 
   const handleTabClick = (tabId: string) => {
-    // In a real app, this would use navigation
-    console.log("Navigate to:", tabId);
+    if (onTabChange) {
+      onTabChange(tabId);
+    }
   };
 
   return (
     <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-card border-t border-border">
-      <div className="flex items-center justify-around py-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabClick(tab.id)}
-            className={`pc-tabbar-item ${currentTab === tab.id ? "active" : ""}`}
-          >
-            <span className="text-lg">{tab.icon}</span>
-            <span className="text-xs font-medium">{tab.label}</span>
-          </button>
-        ))}
+      <div className="flex items-center justify-around py-3">
+        {tabs.map((tab) => {
+          const IconComponent = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              className={`pc-tabbar-item ${currentTab === tab.id ? "active" : ""}`}
+            >
+              <IconComponent size={20} />
+              <span className="text-xs font-medium">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
