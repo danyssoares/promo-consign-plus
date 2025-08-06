@@ -85,7 +85,10 @@ export const ContractsScreen = ({
         {filteredContracts.map(contract => 
           <button
             key={contract.id}
-            onClick={() => onContractClick(contract)}
+            onClick={() => {
+              console.log("Contract clicked:", contract);
+              onContractClick(contract);
+            }}
             className="pc-card w-full text-left hover:scale-[1.02] transition-transform"
           >
             <div className="flex items-center gap-3">
