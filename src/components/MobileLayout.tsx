@@ -20,7 +20,7 @@ export const MobileLayout = ({ children, showTabbar = false, currentTab, onTabCh
 const Tabbar = ({ currentTab, onTabChange }: { currentTab?: string; onTabChange?: (tab: string) => void }) => {
   const tabs = [
     { id: "home", label: "Início", icon: Home },
-    { id: "extrato", label: "Extrato", icon: FileText },
+    { id: "contratos", label: "Contratos", icon: FileText },
     { id: "cartoes", label: "Cartões", icon: CreditCard },
     { id: "suporte", label: "Suporte", icon: HelpCircle },
   ];

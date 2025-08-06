@@ -1,25 +1,23 @@
 import { useState } from "react";
 import { LoginScreen } from "@/components/LoginScreen";
 import { Dashboard } from "@/components/Dashboard";
-import { ExtractScreen } from "@/components/ExtractScreen";
-import { TransactionDetail } from "@/components/TransactionDetail";
 import { ContractsScreen } from "@/components/ContractsScreen";
+import { ContractDetail } from "@/components/ContractDetail";
 import { MobileLayout } from "@/components/MobileLayout";
 
-type Screen = "login" | "dashboard" | "extract" | "transaction-detail" | "contracts";
+type Screen = "login" | "dashboard" | "contracts" | "contract-detail";
 
-interface Transaction {
+interface Contract {
   id: string;
-  type: "income" | "expense";
-  description: string;
-  date: string;
-  time: string;
-  amount: number;
+  name: string;
+  rubric: string;
+  value: number;
+  status: "active" | "inactive";
 }
 
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("login");
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
 
   const handleLogin = () => {
     setCurrentScreen("dashboard");
@@ -30,11 +28,12 @@ const Index = () => {
       case "home":
         setCurrentScreen("dashboard");
         break;
-      case "extrato":
-        setCurrentScreen("extract");
+      case "contratos":
+        setCurrentScreen("contracts");
         break;
       case "cartoes":
-        setCurrentScreen("contracts");
+        // Pode ser implementado futuramente
+        console.log("Cartões clicado");
         break;
       case "suporte":
         // Pode ser implementado futuramente
@@ -43,9 +42,9 @@ const Index = () => {
     }
   };
 
-  const handleTransactionClick = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    setCurrentScreen("transaction-detail");
+  const handleContractClick = (contract: Contract) => {
+    setSelectedContract(contract);
+    setCurrentScreen("contract-detail");
   };
 
   const renderScreen = () => {
@@ -60,32 +59,25 @@ const Index = () => {
           </MobileLayout>
         );
       
-      case "extract":
+      case "contracts":
         return (
-          <MobileLayout showTabbar currentTab="extrato" onTabChange={handleTabChange}>
-            <ExtractScreen 
+          <MobileLayout showTabbar currentTab="contratos" onTabChange={handleTabChange}>
+            <ContractsScreen 
               onBack={() => setCurrentScreen("dashboard")}
-              onTransactionClick={handleTransactionClick}
+              onContractClick={handleContractClick}
             />
           </MobileLayout>
         );
       
-      case "transaction-detail":
+      case "contract-detail":
         return (
-          <MobileLayout showTabbar currentTab="extrato" onTabChange={handleTabChange}>
-            {selectedTransaction && (
-              <TransactionDetail 
-                transaction={selectedTransaction}
-                onBack={() => setCurrentScreen("extract")}
+          <MobileLayout showTabbar currentTab="contratos" onTabChange={handleTabChange}>
+            {selectedContract && (
+              <ContractDetail 
+                contract={selectedContract}
+                onBack={() => setCurrentScreen("contracts")}
               />
             )}
-          </MobileLayout>
-        );
-      
-      case "contracts":
-        return (
-          <MobileLayout showTabbar currentTab="cartoes" onTabChange={handleTabChange}>
-            <ContractsScreen onBack={() => setCurrentScreen("dashboard")} />
           </MobileLayout>
         );
       

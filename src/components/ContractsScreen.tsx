@@ -8,9 +8,11 @@ interface Contract {
   status: "active" | "inactive";
 }
 export const ContractsScreen = ({
-  onBack
+  onBack,
+  onContractClick
 }: {
   onBack: () => void;
+  onContractClick: (contract: Contract) => void;
 }) => {
   const [activeTab, setActiveTab] = useState<"ativos" | "inativos" | "todos">("ativos");
   const contracts: Contract[] = [{
@@ -80,7 +82,12 @@ export const ContractsScreen = ({
 
       {/* Contracts List */}
       <div className="space-y-3">
-        {filteredContracts.map(contract => <div key={contract.id} className="pc-card">
+        {filteredContracts.map(contract => 
+          <button
+            key={contract.id}
+            onClick={() => onContractClick(contract)}
+            className="pc-card w-full text-left hover:scale-[1.02] transition-transform"
+          >
             <div className="flex items-center gap-3">
               {/* Icon */}
               <div className="p-2 bg-secondary rounded-lg">
@@ -100,12 +107,13 @@ export const ContractsScreen = ({
               {/* Value */}
               <div className="pc-text-value">
                 R$ {contract.value.toLocaleString("pt-BR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })}
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
               </div>
             </div>
-          </div>)}
+          </button>
+        )}
       </div>
     </div>;
 };
