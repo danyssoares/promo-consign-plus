@@ -59,16 +59,10 @@ export const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
           Ou entrar com
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <button className="pc-btn-secondary flex items-center justify-center gap-2">
-            <span>🔍</span>
-            Google
-          </button>
-          <button className="pc-btn-secondary flex items-center justify-center gap-2">
-            <span>👆</span>
-            Biometria
-          </button>
-        </div>
+        <button className="pc-btn-secondary w-full flex items-center justify-center gap-2">
+          <span>👆</span>
+          Biometria
+        </button>
       </div>
     </div>
   );
