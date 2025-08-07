@@ -31,13 +31,12 @@ const Index = () => {
       case "contratos":
         setCurrentScreen("contracts");
         break;
-      case "cartoes":
-        // Pode ser implementado futuramente
-        console.log("Cartões clicado");
-        break;
       case "suporte":
         // Pode ser implementado futuramente
         console.log("Suporte clicado");
+        break;
+      case "sair":
+        setCurrentScreen("login");
         break;
     }
   };
