@@ -8,8 +8,12 @@ export const Dashboard = () => {
   return (
     <div className="pc-container space-y-6 max-w-sm mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-center pt-4">
-        <h1 className="pc-text-title">PromoConsig</h1>
+      <div className="flex justify-center items-center pt-4">
+        <img 
+          src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
+          alt="PromoConsig Logo" 
+          className="h-12 w-auto"
+        />
       </div>
 
       {/* Margem Consignável Card */}
