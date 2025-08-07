@@ -15,37 +15,43 @@ export const ContractsScreen = ({
   onContractClick: (contract: Contract) => void;
 }) => {
   const [activeTab, setActiveTab] = useState<"ativos" | "inativos" | "todos">("ativos");
-  const contracts: Contract[] = [{
-    id: "1",
-    name: "Contrato 1",
-    rubric: "Rubrica 1: R$ 350,00",
-    value: 350.00,
-    status: "active"
-  }, {
-    id: "2",
-    name: "Contrato 2",
-    rubric: "Rubrica 2: R$ 420,00",
-    value: 420.00,
-    status: "active"
-  }, {
-    id: "3",
-    name: "Contrato 3",
-    rubric: "Rubrica 3: R$ 280,00",
-    value: 280.00,
-    status: "active"
-  }, {
-    id: "4",
-    name: "Contrato 4",
-    rubric: "Rubrica 4: R$ 500,00",
-    value: 500.00,
-    status: "active"
-  }, {
-    id: "5",
-    name: "Contrato 5",
-    rubric: "Rubrica 5: R$ 300,00",
-    value: 300.00,
-    status: "active"
-  }];
+  const contracts: Contract[] = [
+    {
+      id: "1",
+      name: "Contrato 1",
+      rubric: "Rubrica 1: R$ 350,00",
+      value: 350.00,
+      status: "active"
+    },
+    {
+      id: "2", 
+      name: "Contrato 2",
+      rubric: "Rubrica 2: R$ 420,00",
+      value: 420.00,
+      status: "active"
+    },
+    {
+      id: "3",
+      name: "Contrato 3", 
+      rubric: "Rubrica 3: R$ 280,00",
+      value: 280.00,
+      status: "inactive"
+    },
+    {
+      id: "4",
+      name: "Contrato 4",
+      rubric: "Rubrica 4: R$ 500,00", 
+      value: 500.00,
+      status: "active"
+    },
+    {
+      id: "5",
+      name: "Contrato 5",
+      rubric: "Rubrica 5: R$ 300,00",
+      value: 300.00,
+      status: "inactive"
+    }
+  ];
   const filteredContracts = contracts.filter(contract => {
     if (activeTab === "ativos") return contract.status === "active";
     if (activeTab === "inativos") return contract.status === "inactive";
@@ -78,7 +84,11 @@ export const ContractsScreen = ({
       </div>
 
       {/* Contracts Title */}
-      <h2 className="pc-text-body font-semibold mb-4">Contratos Ativos</h2>
+      <h2 className="pc-text-body font-semibold mb-4">
+        {activeTab === "ativos" ? "Contratos Ativos" : 
+         activeTab === "inativos" ? "Contratos Inativos" : 
+         "Todos os Contratos"}
+      </h2>
 
       {/* Contracts List */}
       <div className="space-y-3">
