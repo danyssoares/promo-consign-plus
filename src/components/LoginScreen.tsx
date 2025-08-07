@@ -1,7 +1,11 @@
+
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
-export const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
+export const LoginScreen = ({ onLogin, onForgotPassword }: { 
+  onLogin: () => void;
+  onForgotPassword: () => void;
+}) => {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -52,7 +56,11 @@ export const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
         </div>
 
         <div className="text-center">
-          <button className="text-muted-foreground pc-text-caption underline">
+          <button 
+            type="button"
+            onClick={onForgotPassword}
+            className="text-muted-foreground pc-text-caption underline"
+          >
             Esqueceu a senha?
           </button>
         </div>

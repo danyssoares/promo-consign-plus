@@ -1,11 +1,13 @@
+
 import { useState } from "react";
 import { LoginScreen } from "@/components/LoginScreen";
+import { ForgotPasswordScreen } from "@/components/ForgotPasswordScreen";
 import { Dashboard } from "@/components/Dashboard";
 import { ContractsScreen } from "@/components/ContractsScreen";
 import { ContractDetail } from "@/components/ContractDetail";
 import { MobileLayout } from "@/components/MobileLayout";
 
-type Screen = "login" | "dashboard" | "contracts" | "contract-detail";
+type Screen = "login" | "forgot-password" | "dashboard" | "contracts" | "contract-detail";
 
 interface Contract {
   id: string;
@@ -22,6 +24,14 @@ const Index = () => {
 
   const handleLogin = () => {
     setCurrentScreen("dashboard");
+  };
+
+  const handleForgotPassword = () => {
+    setCurrentScreen("forgot-password");
+  };
+
+  const handleBackToLogin = () => {
+    setCurrentScreen("login");
   };
 
   const handleTabChange = (tab: string) => {
@@ -52,7 +62,19 @@ const Index = () => {
   const renderScreen = () => {
     switch (currentScreen) {
       case "login":
-        return <LoginScreen onLogin={handleLogin} />;
+        return (
+          <LoginScreen 
+            onLogin={handleLogin} 
+            onForgotPassword={handleForgotPassword}
+          />
+        );
+      
+      case "forgot-password":
+        return (
+          <ForgotPasswordScreen 
+            onBack={handleBackToLogin}
+          />
+        );
       
       case "dashboard":
         return (
@@ -85,7 +107,12 @@ const Index = () => {
         );
       
       default:
-        return <LoginScreen onLogin={handleLogin} />;
+        return (
+          <LoginScreen 
+            onLogin={handleLogin} 
+            onForgotPassword={handleForgotPassword}
+          />
+        );
     }
   };
 
