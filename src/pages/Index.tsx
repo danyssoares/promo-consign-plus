@@ -18,6 +18,7 @@ interface Contract {
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("login");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [previousTab, setPreviousTab] = useState<string>("todos");
 
   const handleLogin = () => {
     setCurrentScreen("dashboard");
@@ -41,8 +42,9 @@ const Index = () => {
     }
   };
 
-  const handleContractClick = (contract: Contract) => {
+  const handleContractClick = (contract: Contract, currentTab: string) => {
     setSelectedContract(contract);
+    setPreviousTab(currentTab);
     setCurrentScreen("contract-detail");
   };
 
@@ -64,6 +66,7 @@ const Index = () => {
             <ContractsScreen 
               onBack={() => setCurrentScreen("dashboard")}
               onContractClick={handleContractClick}
+              initialTab={previousTab}
             />
           </MobileLayout>
         );

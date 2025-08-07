@@ -10,7 +10,7 @@ interface Contract {
 
 export const ContractDetail = ({ contract, onBack }: { 
   contract: Contract; 
-  onBack: () => void; 
+  onBack: () => void;
 }) => {
   return (
     <div className="pc-container max-w-sm mx-auto">

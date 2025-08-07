@@ -9,12 +9,14 @@ interface Contract {
 }
 export const ContractsScreen = ({
   onBack,
-  onContractClick
+  onContractClick,
+  initialTab = "todos"
 }: {
   onBack: () => void;
-  onContractClick: (contract: Contract) => void;
+  onContractClick: (contract: Contract, currentTab: string) => void;
+  initialTab?: string;
 }) => {
-  const [activeTab, setActiveTab] = useState<"ativos" | "inativos" | "todos">("ativos");
+  const [activeTab, setActiveTab] = useState<"ativos" | "inativos" | "todos">(initialTab as any);
   const contracts: Contract[] = [
     {
       id: "1",
@@ -97,7 +99,7 @@ export const ContractsScreen = ({
             key={contract.id}
             onClick={() => {
               console.log("Contract clicked:", contract);
-              onContractClick(contract);
+              onContractClick(contract, activeTab);
             }}
             className="pc-card w-full text-left hover:scale-[1.02] transition-transform"
           >
