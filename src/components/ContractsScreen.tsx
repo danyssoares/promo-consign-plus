@@ -10,7 +10,7 @@ interface Contract {
 export const ContractsScreen = ({
   onBack,
   onContractClick,
-  initialTab = "todos"
+  initialTab = "ativos"
 }: {
   onBack: () => void;
   onContractClick: (contract: Contract, currentTab: string) => void;

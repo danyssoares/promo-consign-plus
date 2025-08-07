@@ -18,7 +18,7 @@ interface Contract {
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("login");
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-  const [previousTab, setPreviousTab] = useState<string>("todos");
+  const [previousTab, setPreviousTab] = useState<string>("ativos");
 
   const handleLogin = () => {
     setCurrentScreen("dashboard");
