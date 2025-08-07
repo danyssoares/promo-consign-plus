@@ -8,7 +8,7 @@ export const Dashboard = () => {
   return (
     <div className="pc-container space-y-6 max-w-sm mx-auto">
       {/* Header */}
-      <div className="flex justify-center items-center pt-4">
+      <div className="flex justify-start items-center pt-4">
         <img 
           src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
           alt="PromoConsig Logo" 
