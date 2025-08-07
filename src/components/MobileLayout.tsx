@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Home, FileText, CreditCard, HelpCircle } from "lucide-react";
+import { Home, FileText, Settings, HelpCircle } from "lucide-react";
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -21,7 +21,7 @@ const Tabbar = ({ currentTab, onTabChange }: { currentTab?: string; onTabChange?
   const tabs = [
     { id: "home", label: "Início", icon: Home },
     { id: "contratos", label: "Contratos", icon: FileText },
-    { id: "cartoes", label: "Cartões", icon: CreditCard },
+    { id: "configuracoes", label: "Configurações", icon: Settings },
     { id: "suporte", label: "Suporte", icon: HelpCircle },
   ];
 

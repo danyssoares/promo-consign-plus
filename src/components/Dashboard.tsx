@@ -1,4 +1,4 @@
-import { Settings } from "lucide-react";
+
 
 export const Dashboard = () => {
   const months = ["Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -10,7 +10,6 @@ export const Dashboard = () => {
       {/* Header */}
       <div className="flex justify-between items-center pt-4">
         <h1 className="pc-text-title">PromoConsig</h1>
-        <Settings className="text-muted-foreground" size={24} />
       </div>
 
       {/* Margem Consignável Card */}
