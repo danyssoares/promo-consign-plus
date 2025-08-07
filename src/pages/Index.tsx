@@ -37,6 +37,7 @@ const Index = () => {
         console.log("Suporte clicado");
         break;
       case "sair":
+        setPreviousTab("ativos"); // Reset to active contracts tab on logout
         setCurrentScreen("login");
         break;
     }
