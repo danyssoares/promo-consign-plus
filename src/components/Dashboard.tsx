@@ -22,14 +22,19 @@ export const Dashboard = () => {
         </div>
         
         {/* Chart */}
-        <div className="h-24 flex items-end justify-between mb-2">
+        <div className="h-32 flex items-end justify-between gap-2 p-3 bg-muted/10 rounded-lg">
           {marginData.map((height, index) => (
-            <div key={index} className="flex flex-col items-center gap-1">
-              <div
-                className="bg-primary/20 w-6 rounded-t"
-                style={{ height: `${height}%` }}
-              />
-              <span className="pc-text-caption text-muted-foreground text-xs">
+            <div key={index} className="flex flex-col items-center gap-2 flex-1">
+              <div className="flex flex-col items-center justify-end h-20">
+                <span className="pc-text-caption text-primary font-medium mb-1">
+                  {height}%
+                </span>
+                <div
+                  className="bg-gradient-to-t from-primary to-primary/60 w-full rounded-t-sm transition-all duration-300 hover:from-primary/80 hover:to-primary/40"
+                  style={{ height: `${height}%`, minWidth: '20px' }}
+                />
+              </div>
+              <span className="pc-text-caption text-muted-foreground text-xs font-medium">
                 {months[index]}
               </span>
             </div>
@@ -47,14 +52,19 @@ export const Dashboard = () => {
         </div>
         
         {/* Chart */}
-        <div className="h-24 flex items-end justify-between mb-2">
+        <div className="h-32 flex items-end justify-between gap-2 p-3 bg-muted/10 rounded-lg">
           {creditData.map((height, index) => (
-            <div key={index} className="flex flex-col items-center gap-1">
-              <div
-                className="bg-accent/80 w-6 rounded-t"
-                style={{ height: `${height}%` }}
-              />
-              <span className="pc-text-caption text-muted-foreground text-xs">
+            <div key={index} className="flex flex-col items-center gap-2 flex-1">
+              <div className="flex flex-col items-center justify-end h-20">
+                <span className="pc-text-caption text-accent-foreground font-medium mb-1">
+                  {height}%
+                </span>
+                <div
+                  className="bg-gradient-to-t from-accent to-accent/60 w-full rounded-t-sm transition-all duration-300 hover:from-accent/80 hover:to-accent/40"
+                  style={{ height: `${height}%`, minWidth: '20px' }}
+                />
+              </div>
+              <span className="pc-text-caption text-muted-foreground text-xs font-medium">
                 {months[index]}
               </span>
             </div>
