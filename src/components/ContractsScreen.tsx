@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileText, Circle } from "lucide-react";
 import { useState } from "react";
 interface Contract {
   id: string;
@@ -116,6 +116,16 @@ export const ContractsScreen = ({
                   {contract.rubric}
                 </div>
               </div>
+
+              {/* Status indicator (only in "todos" tab) */}
+              {activeTab === "todos" && (
+                <div className="mr-2">
+                  <Circle 
+                    size={12} 
+                    className={`${contract.status === "active" ? "text-green-500 fill-green-500" : "text-red-500 fill-red-500"}`}
+                  />
+                </div>
+              )}
 
               {/* Value */}
               <div className="pc-text-value">
