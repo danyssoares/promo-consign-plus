@@ -9,7 +9,13 @@ export const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center pc-container max-w-sm mx-auto">
       <div className="mb-12 text-center">
-        <h1 className="pc-text-hero mb-2">PromoConsig</h1>
+        <div className="mb-6 flex justify-center">
+          <img 
+            src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
+            alt="PromoConsig Logo" 
+            className="h-16 w-auto"
+          />
+        </div>
         <h2 className="pc-text-title mb-8">Bem-vindo de volta</h2>
       </div>
 
