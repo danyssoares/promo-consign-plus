@@ -106,7 +106,13 @@ export const ContractsScreen = ({
             <div className="flex items-center gap-3">
               {/* Icon */}
               <div className="p-2 bg-secondary rounded-lg">
-                <FileText className="text-muted-foreground" size={20} />
+                <FileText 
+                  className={`${activeTab === "todos" 
+                    ? (contract.status === "active" ? "text-green-500" : "text-red-500")
+                    : "text-muted-foreground"
+                  }`} 
+                  size={20} 
+                />
               </div>
 
               {/* Content */}
@@ -119,15 +125,6 @@ export const ContractsScreen = ({
                 </div>
               </div>
 
-              {/* Status indicator (only in "todos" tab) */}
-              {activeTab === "todos" && (
-                <div className="mr-2">
-                  <Circle 
-                    size={12} 
-                    className={`${contract.status === "active" ? "text-green-500 fill-green-500" : "text-red-500 fill-red-500"}`}
-                  />
-                </div>
-              )}
 
               {/* Value */}
               <div className="pc-text-value">
