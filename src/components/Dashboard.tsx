@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { User } from "lucide-react";
 export const Dashboard = () => {
   const {
     getUsuarioLogado
@@ -18,9 +19,7 @@ export const Dashboard = () => {
         {/* User Info */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-            <span className="pc-text-caption font-medium text-muted-foreground text-xs">
-              {userLogin.charAt(0).toUpperCase()}
-            </span>
+            <User className="w-4 h-4 text-muted-foreground" />
           </div>
           <span className="pc-text-body text-foreground text-xs font-medium">{userLogin}</span>
         </div>
