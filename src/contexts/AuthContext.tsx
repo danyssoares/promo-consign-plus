@@ -6,12 +6,15 @@ interface AuthContextType {
   authorizationData: string | null;
   colaborador: any;
   listaMatriculasColaborador: any[];
+  lastLogin: string | null;
   setUsuarioLogado: (usuario: UserData | null) => void;
   setAuthorizationData: (auth: string | null) => void;
   setColaborador: (colaborador: any) => void;
   setListaMatriculasColaborador: (lista: any[]) => void;
+  setLastLogin: (login: string | null) => void;
   getAuthorizationData: () => string | null;
   getUsuarioLogado: () => UserData | null;
+  getLastLogin: () => string | null;
   logout: () => void;
 }
 
@@ -34,6 +37,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authorizationData, setAuthorizationDataState] = useState<string | null>(null);
   const [colaborador, setColaboradorState] = useState<any>(null);
   const [listaMatriculasColaborador, setListaMatriculasColaboradorState] = useState<any[]>([]);
+  const [lastLogin, setLastLoginState] = useState<string | null>(null);
 
   const setUsuarioLogado = (usuario: UserData | null) => {
     setUsuarioLogadoState(usuario);
@@ -61,6 +65,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setListaMatriculasColaboradorState(lista);
   };
 
+  const setLastLogin = (login: string | null) => {
+    setLastLoginState(login);
+    if (login) {
+      localStorage.setItem('lastLogin', login);
+    } else {
+      localStorage.removeItem('lastLogin');
+    }
+  };
+
   const getAuthorizationData = () => {
     return authorizationData || localStorage.getItem('authToken');
   };
@@ -79,11 +92,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return null;
   };
 
+  const getLastLogin = () => {
+    return lastLogin || localStorage.getItem('lastLogin');
+  };
+
   const logout = () => {
     setUsuarioLogado(null);
     setAuthorizationData(null);
     setColaborador(null);
     setListaMatriculasColaborador([]);
+    // Não limpar o lastLogin no logout para manter para próximo acesso
   };
 
   const value: AuthContextType = {
@@ -91,12 +109,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     authorizationData,
     colaborador,
     listaMatriculasColaborador,
+    lastLogin,
     setUsuarioLogado,
     setAuthorizationData,
     setColaborador,
     setListaMatriculasColaborador,
+    setLastLogin,
     getAuthorizationData,
     getUsuarioLogado,
+    getLastLogin,
     logout
   };
 

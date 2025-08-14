@@ -1,6 +1,6 @@
 
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { loginService } from "@/services/loginService";
 import { useToast } from "@/hooks/use-toast";
@@ -13,8 +13,16 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { setUsuarioLogado, setAuthorizationData } = useAuth();
+  const { setUsuarioLogado, setAuthorizationData, setLastLogin, getLastLogin } = useAuth();
   const { toast } = useToast();
+
+  // Carregar último login salvo
+  useEffect(() => {
+    const lastLoginSaved = getLastLogin();
+    if (lastLoginSaved) {
+      setUsername(lastLoginSaved);
+    }
+  }, [getLastLogin]);
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -38,6 +46,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       // Step 3: Store auth data
       setUsuarioLogado(userData);
       setAuthorizationData(loginResponse.access_token);
+      setLastLogin(username); // Salvar último login usado
 
       // Step 4: Check if user needs to accept terms
       if (!userData.isAceiteValido) {

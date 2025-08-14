@@ -1,6 +1,12 @@
 
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Dashboard = () => {
+  const { getUsuarioLogado } = useAuth();
+  const userData = getUsuarioLogado();
+  
+  // Extrair login do objeto Global se existir
+  const userLogin = (userData as any)?.Global?.login || userData?.login || userData?.nome || "Usuário";
   const months = ["Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const marginData = [40, 65, 30, 80, 45, 70];
   const creditData = [60, 45, 70, 55, 85, 40];
@@ -8,12 +14,20 @@ export const Dashboard = () => {
   return (
     <div className="pc-container space-y-6 max-w-sm mx-auto">
       {/* Header */}
-      <div className="flex justify-start items-center pt-4">
-        <img 
-          src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
-          alt="PromoConsig Logo" 
-          className="h-12 w-auto"
-        />
+      <div className="flex flex-col pt-4">
+        <div className="flex justify-start items-center mb-4">
+          <img 
+            src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
+            alt="PromoConsig Logo" 
+            className="h-12 w-auto"
+          />
+        </div>
+        
+        {/* User Info */}
+        <div className="pc-card">
+          <h3 className="pc-text-body text-muted-foreground mb-2">Usuário Logado</h3>
+          <div className="pc-text-value text-primary">{userLogin}</div>
+        </div>
       </div>
 
       {/* Margem Consignável Card */}

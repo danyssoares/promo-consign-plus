@@ -13,6 +13,11 @@ export interface UserData {
   nome: string;
   email: string;
   isAceiteValido: boolean;
+  login?: string;
+  Global?: {
+    login: string;
+    [key: string]: any;
+  };
   // Add other user properties as needed
 }
 
