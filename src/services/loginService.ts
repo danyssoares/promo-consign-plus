@@ -56,8 +56,8 @@ export class LoginService {
     };
 
     try {
-      //const response = await fetch(`${environment.apiUrl}/oauth/token`, {
-        const response = await fetch('/api/services/consig-security/oauth/token', {
+      const response = await fetch(`${environment.securityUrl}/oauth/token`, {
+        //const response = await fetch('/api/services/consig-security/oauth/token', {
         method: 'POST',
         headers,
         body: param
@@ -85,8 +85,8 @@ export class LoginService {
     };
 
     try {
-      //const response = await fetch(`${environment.apiUrl}/usuario/buscarDadosUsuarioLogado`, {
-    const response = await fetch(`/api/services/usuario/buscarDadosUsuarioLogado`, {
+    const response = await fetch(`${environment.consigApiUrl}/usuario/buscarDadosUsuarioLogado`, {
+    //const response = await fetch(`/api/services/usuario/buscarDadosUsuarioLogado`, {
         method: 'GET',
         headers
       });
