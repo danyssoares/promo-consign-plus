@@ -46,11 +46,9 @@ export class LoginService {
     };
 
     try {
-      const response = await fetch(`${environment.apiUrl}/login-proxy`, {
+      const response = await fetch(`${environment.apiUrl}/oauth/token`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers,
         body: param
       });
 
@@ -71,7 +69,7 @@ export class LoginService {
     };
 
     try {
-      const response = await fetch(`${environment.apiUrl}/user-data-proxy`, {
+      const response = await fetch(`${environment.apiUrl}/user/me`, {
         method: 'GET',
         headers
       });
