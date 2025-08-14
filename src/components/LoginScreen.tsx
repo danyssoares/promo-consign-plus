@@ -33,21 +33,21 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       const loginResponse = await loginService.getLogin(username, password);
       
       // Step 2: Get user data
-      const userData = await loginService.buscarDadosUsuarioLogado(`bearer ${loginResponse.access_token}`);
+      //const userData = await loginService.buscarDadosUsuarioLogado(`bearer ${loginResponse.access_token}`);
       
       // Step 3: Store auth data
-      setUsuarioLogado(userData);
+      //setUsuarioLogado(userData);
       setAuthorizationData(loginResponse.access_token);
 
       // Step 4: Check if user needs to accept terms
-      if (!userData.isAceiteValido) {
+      /*if (!userData.isAceiteValido) {
         // For now, we'll skip the acceptance modal and proceed
         // You can implement the modal later if needed
         toast({
           title: "Aviso",
           description: "Termos de aceite pendentes. Implementar modal de aceite.",
         });
-      }
+      }*/
 
       // Step 5: Redirect to dashboard
       onLogin();

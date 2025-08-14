@@ -36,7 +36,7 @@ export class LoginService {
   ): Promise<LoginResponse> {
     // Get client IP before making the request
     const clientIp = await this.getClientIp();
-    let param = `client_id=${environment.clientId}&password=${encodeURIComponent(senha)}&username=${encodeURIComponent(nome)}&grant_type=password&scope=read%20write&client_secret=${environment.clientSecret}`;
+    let param = `client_id=${environment.clientId}&password=${encodeURIComponent(senha)}&username=${encodeURIComponent(nome)}&grant_type=password&client_secret=${environment.clientSecret}`;
     
     if (exibirCaptcha) {
       param += `&captchaId=${captchaId}&captcha_code=${captcha}`;
@@ -56,7 +56,8 @@ export class LoginService {
     };
 
     try {
-      const response = await fetch(`${environment.apiUrl}/oauth/token`, {
+      //const response = await fetch(`${environment.apiUrl}/oauth/token`, {
+        const response = await fetch('/api/services/consig-security/oauth/token', {
         method: 'POST',
         headers,
         body: param
@@ -84,7 +85,8 @@ export class LoginService {
     };
 
     try {
-      const response = await fetch(`${environment.apiUrl}/usuario/buscarDadosUsuarioLogado`, {
+      //const response = await fetch(`${environment.apiUrl}/usuario/buscarDadosUsuarioLogado`, {
+    const response = await fetch(`/api/services/usuario/buscarDadosUsuarioLogado`, {
         method: 'GET',
         headers
       });
