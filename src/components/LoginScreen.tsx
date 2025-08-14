@@ -1,6 +1,9 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { loginService } from "@/services/loginService";
+import { useToast } from "@/hooks/use-toast";
 
 export const LoginScreen = ({ onLogin, onForgotPassword }: { 
   onLogin: () => void;
@@ -9,6 +12,57 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { setUsuarioLogado, setAuthorizationData } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogin = async () => {
+    if (!username || !password) {
+      toast({
+        title: "Erro",
+        description: "Verifique os campos inválidos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Step 1: Get login token
+      const loginResponse = await loginService.getLogin(username, password);
+      
+      // Step 2: Get user data
+      const userData = await loginService.buscarDadosUsuarioLogado(`bearer ${loginResponse.access_token}`);
+      
+      // Step 3: Store auth data
+      setUsuarioLogado(userData);
+      setAuthorizationData(loginResponse.access_token);
+
+      // Step 4: Check if user needs to accept terms
+      if (!userData.isAceiteValido) {
+        // For now, we'll skip the acceptance modal and proceed
+        // You can implement the modal later if needed
+        toast({
+          title: "Aviso",
+          description: "Termos de aceite pendentes. Implementar modal de aceite.",
+        });
+      }
+
+      // Step 5: Redirect to dashboard
+      onLogin();
+
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Erro no login",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center pc-container max-w-sm mx-auto">
@@ -65,8 +119,12 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
           </button>
         </div>
 
-        <button onClick={onLogin} className="pc-btn-primary w-full">
-          Entrar
+        <button 
+          onClick={handleLogin} 
+          disabled={isLoading}
+          className="pc-btn-primary w-full disabled:opacity-50"
+        >
+          {isLoading ? "Entrando..." : "Entrar"}
         </button>
 
         <div className="text-center pc-text-caption text-muted-foreground">
