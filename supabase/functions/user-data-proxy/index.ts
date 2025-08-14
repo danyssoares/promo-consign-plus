@@ -23,7 +23,7 @@ serve(async (req) => {
       )
     }
 
-    const response = await fetch('https://tst-consig.azfinisdev.biz:444/services/consig-security/user/me', {
+    const response = await fetch('https://tst-consig.azfinisdev.biz:444/services/consig-security/usuario/buscarDadosUsuarioLogado', {
       method: 'GET',
       headers: {
         'Authorization': authHeader,
