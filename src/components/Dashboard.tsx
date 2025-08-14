@@ -14,19 +14,21 @@ export const Dashboard = () => {
   return (
     <div className="pc-container space-y-6 max-w-sm mx-auto">
       {/* Header */}
-      <div className="flex flex-col pt-4">
-        <div className="flex justify-start items-center mb-4">
-          <img 
-            src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
-            alt="PromoConsig Logo" 
-            className="h-12 w-auto"
-          />
-        </div>
+      <div className="flex justify-between items-center pt-4 mb-6">
+        <img 
+          src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
+          alt="PromoConsig Logo" 
+          className="h-12 w-auto"
+        />
         
         {/* User Info */}
-        <div className="pc-card">
-          <h3 className="pc-text-body text-muted-foreground mb-2">Usuário Logado</h3>
-          <div className="pc-text-value text-primary">{userLogin}</div>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+            <span className="pc-text-caption font-medium text-muted-foreground">
+              {userLogin.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <span className="pc-text-body text-foreground">{userLogin}</span>
         </div>
       </div>
 
