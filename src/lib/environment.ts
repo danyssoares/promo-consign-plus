@@ -1,5 +1,5 @@
 export const environment = {
-  apiUrl: 'https://tst-consig.azfinisdev.biz:444/services/consig-security',
+  apiUrl: '/functions/v1',
   clientId: 'consignado-web-app',
   clientSecret: '123456'
 };
