@@ -1,4 +1,5 @@
 import { environment } from '@/lib/environment';
+import { IpDetection } from '@/lib/ipDetection';
 
 export interface LoginResponse {
   access_token: string;
@@ -16,7 +17,14 @@ export interface UserData {
 }
 
 export class LoginService {
-  private ipExterno = ''; // You may need to implement IP detection
+  private ipExterno = '';
+
+  private async getClientIp(): Promise<string> {
+    if (!this.ipExterno) {
+      this.ipExterno = await IpDetection.getClientIp();
+    }
+    return this.ipExterno;
+  }
 
   async getLogin(
     nome: string, 
@@ -26,6 +34,8 @@ export class LoginService {
     exibirCaptcha: boolean = false, 
     revalidarLogin: boolean = false
   ): Promise<LoginResponse> {
+    // Get client IP before making the request
+    const clientIp = await this.getClientIp();
     let param = `client_id=${environment.clientId}&password=${encodeURIComponent(senha)}&username=${encodeURIComponent(nome)}&grant_type=password&scope=read%20write&client_secret=${environment.clientSecret}`;
     
     if (exibirCaptcha) {
@@ -40,8 +50,8 @@ export class LoginService {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Accept': 'application/json',
       'Authorization': 'Basic Y29uc2lnbmFkby13ZWItYXBwOjEyMzQ1Ng==',
-      'X-Forwarded-For-Private': this.ipExterno,
-      'X-Forwarded-For': this.ipExterno,
+      'X-Forwarded-For-Private': clientIp,
+      'X-Forwarded-For': clientIp,
       'ignoreToken': 'true'
     };
 
