@@ -73,13 +73,18 @@ export class LoginService {
   }
 
   async buscarDadosUsuarioLogado(authorization: string): Promise<UserData> {
+    // Get client IP for headers
+    const clientIp = await this.getClientIp();
+    
     const headers = {
       'Authorization': authorization,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-Forwarded-For-Private': clientIp,
+      'X-Forwarded-For': clientIp
     };
 
     try {
-      const response = await fetch(`${environment.apiUrl}/user/me`, {
+      const response = await fetch(`${environment.apiUrl}/usuario/buscarDadosUsuarioLogado`, {
         method: 'GET',
         headers
       });
