@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Home, FileText, HelpCircle, LogOut } from "lucide-react";
+import { useMobileDetection } from "@/hooks/useMobileDetection";
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -9,10 +10,15 @@ interface MobileLayoutProps {
 }
 
 export const MobileLayout = ({ children, showTabbar = false, currentTab, onTabChange }: MobileLayoutProps) => {
+  const { isMobile, isPWA } = useMobileDetection();
+  
+  // Sempre mostra a tabbar em dispositivos móveis ou quando explicitamente solicitado
+  const shouldShowTabbar = showTabbar || isMobile || isPWA;
+
   return (
     <div className="min-h-screen bg-background max-w-sm mx-auto relative">
-      <div className={showTabbar ? "pb-20" : ""}>{children}</div>
-      {showTabbar && <Tabbar currentTab={currentTab} onTabChange={onTabChange} />}
+      <div className={shouldShowTabbar ? "pb-20" : ""}>{children}</div>
+      {shouldShowTabbar && <Tabbar currentTab={currentTab} onTabChange={onTabChange} />}
     </div>
   );
 };

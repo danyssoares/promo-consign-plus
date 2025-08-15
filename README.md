@@ -60,6 +60,23 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Mobile Support
+
+This project now supports mobile platforms (Android and iOS) through Capacitor. See [MOBILE.md](MOBILE.md) for detailed instructions on building and deploying mobile versions.
+
+### Quick Mobile Commands
+
+```bash
+# Build for mobile platforms
+npm run build:mobile
+
+# Open Android project
+npm run open:android
+
+# Open iOS project (Mac only)
+npm run open:ios
+```
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/16aa668a-a50a-4294-b737-997952c8879f) and click on Share -> Publish.
