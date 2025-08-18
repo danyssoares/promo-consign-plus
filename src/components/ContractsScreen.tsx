@@ -41,7 +41,37 @@ export const ContractsScreen = ({
         
         // Check if we have the required data
         if (!colaborador?.id || !usuarioLogado?.id || !authToken) {
-          throw new Error("Dados do colaborador, usuário ou token de autenticação não encontrados");
+          // Tentar novamente após um pequeno delay para garantir que os dados estejam disponíveis
+          setTimeout(async () => {
+            const retryAuth = getAuthorizationData();
+            const retryUsuario = getUsuarioLogado();
+            
+            if (!colaborador?.id || !retryUsuario?.id || !retryAuth) {
+              throw new Error("Dados do colaborador, usuário ou token de autenticação não encontrados");
+            }
+
+            // Fetch contract history
+            const contratoHistorico = await contratoService.buscarHistoricoPorColaborador(
+              colaborador.id,
+              retryUsuario.id,
+              retryAuth
+            );
+
+            // Transform the API response to match our display interface
+            const transformedContracts: ContractDisplay[] = contratoHistorico.map((contrato: ContratoHistorico) => ({
+              id: contrato.id || "",
+              nomeTipoRubrica: contrato.nomeTipoRubrica || "Não informado",
+              rubricaNome: contrato.rubricaNome || "Não informado",
+              parcelas: contrato.parcelas || 0,
+              valorParcelaFormatado: contrato.valorParcelaFormatado || "R$ 0,00",
+              total: contrato.total || 0,
+              situacao: contrato.situacao || "",
+              status: contrato.situacao === 'Aprovado' ? "active" : "inactive"
+            }));
+
+            setContracts(transformedContracts);
+          }, 500);
+          return;
         }
 
         // Fetch contract history
@@ -220,23 +250,25 @@ export const ContractsScreen = ({
 
                 {/* Content */}
                 <div className="flex-1">
-                  <div className="pc-text-body font-medium">
-                    Contrato: {contract.id}
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 mt-1">
-                    <div className="pc-text-caption">
-                      <span className="font-medium">Modalidade:</span> {contract.nomeTipoRubrica}
+                  <div className="flex items-center gap-2">
+                    <div className="pc-text-body font-medium">
+                      Nº: {contract.id}
                     </div>
-                    <div className="pc-text-caption">
-                      <span className="font-medium">Produto:</span> {contract.rubricaNome}
-                    </div>
-                    <div className="pc-text-caption">
-                      <span className="font-medium">Parcelas:</span> {contract.parcelas}
-                    </div>
-                    <div className="pc-text-caption">
-                      <span className="font-medium">Valor Parcela:</span> {contract.valorParcelaFormatado}
+                    <div className="pc-text-caption text-xs text-muted-foreground">
+                      {contract.situacao}
                     </div>
                   </div>
+                  <div className="pc-text-caption mt-1">
+                    {contract.rubricaNome}
+                  </div>
+                  <div className="pc-text-caption text-xs mt-1">
+                    ({contract.nomeTipoRubrica})
+                  </div>
+                  {contract.parcelas > 0 && (
+                    <div className="pc-text-caption text-xs mt-1">
+                      {contract.parcelas} de {contract.valorParcelaFormatado}
+                    </div>
+                  )}
                 </div>
 
                 {/* Value */}

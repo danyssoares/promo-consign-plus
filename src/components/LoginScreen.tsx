@@ -1,4 +1,3 @@
-
 import { Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +20,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
   const [authToken, setAuthToken] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
   
-  const { setUsuarioLogado, setAuthorizationData, setLastLogin, getLastLogin, setColaborador } = useAuth();
+  const { setUsuarioLogado, setAuthorizationData, setLastLogin, getLastLogin, setColaborador, getUsuarioLogado } = useAuth();
   const { toast } = useToast();
 
   // Carregar último login salvo
@@ -89,20 +88,25 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
     setIsLoading(false);
   };
 
-  const completeLogin = async () => {
+  const completeLogin = async (userDataParam?: UserData) => {
     try {
       // Verificar se temos os dados do usuário
-      if (!userData) {
-        toast({
-          title: "Erro",
-          description: "Dados do usuário não encontrados.",
-          variant: "destructive",
-        });
-        return;
+      const currentUserData = userDataParam || userData;
+      if (!currentUserData) {
+        // Tentar obter os dados do usuário do contexto
+        const authUserData = getUsuarioLogado();
+        if (!authUserData) {
+          toast({
+            title: "Erro",
+            description: "Dados do usuário não encontrados.",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       // Step 4: Check if user needs to accept terms
-      if (!userData.isAceiteValido) {
+      if (currentUserData && !currentUserData.isAceiteValido) {
         // For now, we'll skip the acceptance modal and proceed
         // You can implement the modal later if needed
         toast({
@@ -208,7 +212,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
                 setUsuarioLogado(updatedUserData);
                 
                 // Continuar com o fluxo de login
-                await completeLogin();
+                await completeLogin(updatedUserData);
               } else {
                 toast({
                   title: "Colaborador não encontrado",
@@ -247,7 +251,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
         }
       } else {
         // Se não houver documento federal, continuar com o fluxo normal
-        await completeLogin();
+        await completeLogin(userDataResponse);
       }
 
     } catch (error) {
