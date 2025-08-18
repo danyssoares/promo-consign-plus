@@ -27,49 +27,53 @@ export const ContractDetail = ({ contract, onBack }: {
 
       {/* Contract Details */}
       <div className="pc-card">
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Contract ID */}
-          <div className="flex justify-between items-center">
-            <span className="pc-text-caption">Número do Contrato</span>
+          <div className="space-y-1">
+            <span className="pc-text-caption block">Número do Contrato</span>
             <span className="pc-text-body font-medium">{contract.id}</span>
           </div>
           
-          {/* Modalidade */}
-          <div className="flex justify-between items-center">
-            <span className="pc-text-caption">Modalidade</span>
-            <span className="pc-text-body font-medium">{contract.nomeTipoRubrica}</span>
+          {/* Modalidade and Produto */}
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-1">
+              <span className="pc-text-caption block">Modalidade</span>
+              <span className="pc-text-body font-medium">{contract.nomeTipoRubrica}</span>
+            </div>
+            
+            <div className="space-y-1">
+              <span className="pc-text-caption block">Produto</span>
+              <span className="pc-text-body font-medium">{contract.rubricaNome}</span>
+            </div>
           </div>
           
-          {/* Produto */}
-          <div className="flex justify-between items-center">
-            <span className="pc-text-caption">Produto</span>
-            <span className="pc-text-body font-medium">{contract.rubricaNome}</span>
-          </div>
-          
-          {/* Parcelas */}
-          <div className="flex justify-between items-center">
-            <span className="pc-text-caption">Quantidade de Parcelas</span>
-            <span className="pc-text-body font-medium">{contract.parcelas}</span>
-          </div>
-          
-          {/* Valor da Parcela */}
-          <div className="flex justify-between items-center">
-            <span className="pc-text-caption">Valor da Parcela</span>
-            <span className="pc-text-body font-medium">{contract.valorParcelaFormatado}</span>
+          {/* Parcelas and Valor da Parcela */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <span className="pc-text-caption block">Parcelas</span>
+              <span className="pc-text-body font-medium">{contract.parcelas}</span>
+            </div>
+            
+            <div className="space-y-1">
+              <span className="pc-text-caption block">Valor Parcela</span>
+              <span className="pc-text-body font-medium">{contract.valorParcelaFormatado}</span>
+            </div>
           </div>
           
           {/* Valor Solicitado (Total) */}
-          <div className="flex justify-between items-center">
-            <span className="pc-text-caption">Valor Solicitado</span>
-            <span className="pc-text-value">R$ {contract.total.toLocaleString("pt-BR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })}</span>
+          <div className="bg-muted/50 p-4 rounded-lg">
+            <div className="text-center space-y-1">
+              <span className="pc-text-caption block">Valor Solicitado</span>
+              <span className="pc-text-value text-2xl">R$ {contract.total.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              })}</span>
+            </div>
           </div>
           
           {/* Status */}
-          <div className="flex justify-between items-center">
-            <span className="pc-text-caption">Status</span>
+          <div className="space-y-1">
+            <span className="pc-text-caption block">Status</span>
             <span className={`pc-text-body font-medium ${
               contract.status === "active" ? "pc-text-highlight" : "text-muted-foreground"
             }`}>
