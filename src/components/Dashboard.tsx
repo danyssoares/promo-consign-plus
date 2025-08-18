@@ -1,16 +1,79 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { convenioService, LimiteUtilizado } from "@/services/convenioService";
+
 export const Dashboard = () => {
   const {
-    getUsuarioLogado
+    getUsuarioLogado,
+    getAuthorizationData,
+    colaborador
   } = useAuth();
   const userData = getUsuarioLogado();
+  const authToken = getAuthorizationData();
+
+  const [valorMargemDisponivelCartao, setValorMargemDisponivelCartao] = useState<number>(0);
+  const [valorMargemDisponivelEmprestimo, setValorMargemDisponivelEmprestimo] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Extrair login do objeto Global se existir
-  const userLogin = (userData as any)?.Global?.login || userData?.login || userData?.nome || "Usuário";
+  const userLogin = (userData as { Global?: { login?: string } })?.Global?.login || (userData as { login?: string })?.login || (userData as { nome?: string })?.nome || "Usuário";
   const months = ["Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const marginData = [40, 65, 30, 80, 45, 70];
   const creditData = [60, 45, 70, 55, 85, 40];
+
+  useEffect(() => {
+    const fetchLimitesUtilizados = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Verificar se temos os dados necessários
+        if (!colaborador?.id || !authToken) {
+          throw new Error("Dados do colaborador ou token de autenticação não encontrados");
+        }
+
+        // Buscar limites utilizados
+        const listaValorUtilizado = await convenioService.buscarLimiteUtilizadoPorColaborador(
+          colaborador.id, 
+          authToken
+        );
+
+        // Extrair os valores específicos
+        const valorMargemCartao = colaborador.folhaColaborador ? colaborador.folhaColaborador.valorMargemCartao : 0;
+        const valorMargemEmprestimo = colaborador.folhaColaborador ? colaborador.folhaColaborador.valorMargemEmprestimo : 0;
+        if (listaValorUtilizado.length >= 2) {
+          setValorMargemDisponivelCartao(valorMargemCartao - (listaValorUtilizado[1].valorUtilizado || 0));
+          setValorMargemDisponivelEmprestimo(valorMargemEmprestimo - (listaValorUtilizado[0].valorUtilizado || 0));
+        } else {
+          setValorMargemDisponivelCartao(0);
+          setValorMargemDisponivelEmprestimo(0);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar limites utilizados:", err);
+        setError("Falha ao carregar os dados de margem utilizada");
+        setValorMargemDisponivelCartao(0);
+        setValorMargemDisponivelEmprestimo(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLimitesUtilizados();
+  }, [colaborador, authToken]);
+
+  if (loading) {
+    return (
+      <div className="pc-container space-y-6 max-w-sm mx-auto flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Carregando dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="pc-container space-y-6 max-w-sm mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center pt-4 mb-6">
@@ -30,8 +93,17 @@ export const Dashboard = () => {
         <h3 className="pc-text-body text-muted-foreground mb-2">Margem Consignável</h3>
         <div className="mb-4">
           <span className="pc-text-caption text-muted-foreground">Margem Disponível</span>
-          <div className="pc-text-value">R$ 1.234,56</div>
-          <span className="pc-text-caption text-muted-foreground">Total</span>
+          <div className="pc-text-value">
+            {error ? (
+              <span className="text-destructive">Erro ao carregar</span>
+            ) : (
+              `R$ ${valorMargemDisponivelEmprestimo.toLocaleString('pt-BR', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+              })}`
+            )}
+          </div>
+          {/*<span className="pc-text-caption text-muted-foreground">Total</span>*/}
         </div>
         
         {/* Chart */}
@@ -58,8 +130,17 @@ export const Dashboard = () => {
         <h3 className="pc-text-body text-muted-foreground mb-2">Cartão de Crédito</h3>
         <div className="mb-4">
           <span className="pc-text-caption text-muted-foreground">Limite Disponível</span>
-          <div className="pc-text-value">R$ 5.678,90</div>
-          <span className="pc-text-caption text-muted-foreground">Total</span>
+          <div className="pc-text-value">
+            {error ? (
+              <span className="text-destructive">Erro ao carregar</span>
+            ) : (
+              `R$ ${valorMargemDisponivelCartao.toLocaleString('pt-BR', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+              })}`
+            )}
+          </div>
+          {/*<span className="pc-text-caption text-muted-foreground">Total</span>*/}
         </div>
         
         {/* Chart */}

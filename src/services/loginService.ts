@@ -9,6 +9,7 @@ export interface LoginResponse {
 }
 
 export interface UserData {
+  pessoaFisica: any;
   id: string;
   nome: string;
   email: string;

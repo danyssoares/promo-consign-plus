@@ -9,17 +9,21 @@ import { MobileLayout } from "@/components/MobileLayout";
 
 type Screen = "login" | "forgot-password" | "dashboard" | "contracts" | "contract-detail";
 
-interface Contract {
-  id: string;
-  name: string;
-  rubric: string;
-  value: number;
+// Definindo a interface do contrato com os campos corretos
+interface ContractDisplay {
+  id: string; // Número do Contrato
+  nomeTipoRubrica: string; // Modalidade
+  rubricaNome: string; // Produto
+  parcelas: number; // Quantidade de Parcelas
+  valorParcelaFormatado: string; // Valor da Parcela (já formatado)
+  total: number; // Valor Solicitado
+  situacao: string;
   status: "active" | "inactive";
 }
 
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("login");
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [selectedContract, setSelectedContract] = useState<ContractDisplay | null>(null);
   const [previousTab, setPreviousTab] = useState<string>("ativos");
 
   const handleLogin = () => {
@@ -53,7 +57,7 @@ const Index = () => {
     }
   };
 
-  const handleContractClick = (contract: Contract, currentTab: string) => {
+  const handleContractClick = (contract: ContractDisplay, currentTab: string) => {
     setSelectedContract(contract);
     setPreviousTab(currentTab);
     setCurrentScreen("contract-detail");

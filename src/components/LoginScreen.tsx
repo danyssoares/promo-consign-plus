@@ -2,8 +2,10 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { loginService } from "@/services/loginService";
+import { loginService, UserData } from "@/services/loginService";
+import { colaboradorService, MatriculaData } from "@/services/colaboradorService";
 import { useToast } from "@/hooks/use-toast";
+import { SelectMatriculaModal } from "@/components/SelectMatriculaModal";
 
 export const LoginScreen = ({ onLogin, onForgotPassword }: { 
   onLogin: () => void;
@@ -13,7 +15,13 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { setUsuarioLogado, setAuthorizationData, setLastLogin, getLastLogin } = useAuth();
+  const [showMatriculaModal, setShowMatriculaModal] = useState(false);
+  const [matriculas, setMatriculas] = useState<MatriculaData[]>([]);
+  const [documentoFederal, setDocumentoFederal] = useState("");
+  const [authToken, setAuthToken] = useState("");
+  const [userData, setUserData] = useState<UserData | null>(null);
+  
+  const { setUsuarioLogado, setAuthorizationData, setLastLogin, getLastLogin, setColaborador } = useAuth();
   const { toast } = useToast();
 
   // Carregar último login salvo
@@ -23,6 +31,99 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       setUsername(lastLoginSaved);
     }
   }, [getLastLogin]);
+
+  const handleSelectMatricula = async (matricula: MatriculaData) => {
+    try {
+      // Verificar se temos os dados necessários
+      if (!documentoFederal || !authToken || !userData) {
+        toast({
+          title: "Erro",
+          description: "Dados insuficientes para continuar.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Chamar a API para buscar os detalhes do colaborador com a matrícula selecionada
+      const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(
+        documentoFederal, 
+        matricula.codigoMatricula, 
+        authToken
+      );
+      
+      if (colaboradorDetalhe) {
+        // Salvar dados do colaborador no contexto
+        setColaborador(colaboradorDetalhe);
+        
+        // Atualizar o nome do usuário logado
+        /*const updatedUserData = {
+          ...userData,
+          nome: colaboradorDetalhe.nome
+        };
+        setUsuarioLogado(updatedUserData);*/
+        
+        // Fechar o modal
+        setShowMatriculaModal(false);
+        
+        // Continuar com o fluxo de login
+        await completeLogin();
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível obter os dados do colaborador.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao selecionar matrícula:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao selecionar a matrícula.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCancelMatricula = () => {
+    setShowMatriculaModal(false);
+    setIsLoading(false);
+  };
+
+  const completeLogin = async () => {
+    try {
+      // Verificar se temos os dados do usuário
+      if (!userData) {
+        toast({
+          title: "Erro",
+          description: "Dados do usuário não encontrados.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Step 4: Check if user needs to accept terms
+      if (!userData.isAceiteValido) {
+        // For now, we'll skip the acceptance modal and proceed
+        // You can implement the modal later if needed
+        toast({
+          title: "Aviso",
+          description: "Termos de aceite pendentes. Implementar modal de aceite.",
+        });
+      }
+
+      // Step 5: Redirect to dashboard
+      onLogin();
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Erro no login",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -40,26 +141,114 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       // Step 1: Get login token
       const loginResponse = await loginService.getLogin(username, password);
       
+      // Verificar se o token foi retornado
+      if (!loginResponse.access_token) {
+        toast({
+          title: "Acesso negado",
+          description: "Não foi possível autenticar o usuário.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       // Step 2: Get user data
-      const userData = await loginService.buscarDadosUsuarioLogado(`bearer ${loginResponse.access_token}`);
+      const userDataResponse = await loginService.buscarDadosUsuarioLogado(`bearer ${loginResponse.access_token}`);
+      
+      // Armazenar dados temporariamente
+      setUserData(userDataResponse);
+      setAuthToken(loginResponse.access_token);
       
       // Step 3: Store auth data
-      setUsuarioLogado(userData);
+      setUsuarioLogado(userDataResponse);
       setAuthorizationData(loginResponse.access_token);
       setLastLogin(username); // Salvar último login usado
 
-      // Step 4: Check if user needs to accept terms
-      if (!userData.isAceiteValido) {
-        // For now, we'll skip the acceptance modal and proceed
-        // You can implement the modal later if needed
-        toast({
-          title: "Aviso",
-          description: "Termos de aceite pendentes. Implementar modal de aceite.",
-        });
+      // Step 4: Verificar se o campo documentoFederal existe e não é nulo/vazio
+      const documento = userDataResponse?.pessoaFisica?.pessoa?.documentoFederal;
+      
+      if (documento && documento !== null && documento !== undefined && documento !== '') {
+        // Limpar caracteres especiais do documento
+        const documentoLimpo = documento.replace(/[.\-/]/g, '');
+        setDocumentoFederal(documentoLimpo);
+        
+        // Buscar dados do colaborador
+        const matriculas = await colaboradorService.buscarPorMatricula(documentoLimpo, loginResponse.access_token);
+        
+        if (matriculas) {
+          // Verificar se o colaborador tem matrículas
+          if (matriculas && Array.isArray(matriculas)) {
+            if (matriculas.length === 0) {
+              // Nenhuma matrícula encontrada
+              toast({
+                title: "Nenhuma matrícula encontrada",
+                description: "Não foi possível encontrar matrículas para este colaborador.",
+                variant: "destructive",
+              });
+              setIsLoading(false);
+              return;
+            } else if (matriculas.length === 1) {
+              // Apenas uma matrícula, selecionar automaticamente
+              const matricula = matriculas[0];
+              const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(
+                documentoLimpo, 
+                matricula.codigoMatricula, 
+                loginResponse.access_token
+              );
+              
+              if (colaboradorDetalhe) {
+                // Salvar dados do colaborador no contexto
+                setColaborador(colaboradorDetalhe);
+                
+                // Atualizar o nome do usuário logado
+                const updatedUserData = {
+                  ...userDataResponse,
+                  nome: colaboradorDetalhe.nome
+                };
+                setUsuarioLogado(updatedUserData);
+                
+                // Continuar com o fluxo de login
+                await completeLogin();
+              } else {
+                toast({
+                  title: "Colaborador não encontrado",
+                  description: "Não foi possível encontrar os dados do colaborador.",
+                  variant: "destructive",
+                });
+                setIsLoading(false);
+                return;
+              }
+            } else {
+              // Mais de uma matrícula, abrir modal para seleção
+              setMatriculas(matriculas);
+              setShowMatriculaModal(true);
+              // Não continuar o fluxo ainda, aguardar seleção do usuário
+              return;
+            }
+          } else {
+            // Caso não tenha a propriedade matriculas ou não seja um array
+            toast({
+              title: "Nenhuma matrícula encontrada",
+              description: "Não foi possível encontrar matrículas para este colaborador.",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          // Colaborador não encontrado
+          toast({
+            title: "Colaborador não encontrado",
+            description: "Não foi possível encontrar os dados do colaborador.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        // Se não houver documento federal, continuar com o fluxo normal
+        await completeLogin();
       }
-
-      // Step 5: Redirect to dashboard
-      onLogin();
 
     } catch (error) {
       console.error('Login error:', error);
@@ -68,7 +257,6 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -145,6 +333,13 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
           Biometria
         </button>
       </div>
+
+      <SelectMatriculaModal
+        matriculas={matriculas}
+        onSelect={handleSelectMatricula}
+        onCancel={handleCancelMatricula}
+        isOpen={showMatriculaModal}
+      />
     </div>
   );
 };
