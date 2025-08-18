@@ -30,34 +30,22 @@ export const ContractDetail = ({ contract, onBack }: {
         <div className="space-y-6">
           {/* Contract ID */}
           <div className="space-y-1">
-            <span className="pc-text-caption block">Número do Contrato</span>
+            <span className="pc-text-caption block">Contrato:</span>
             <span className="pc-text-body font-medium">{contract.id}</span>
           </div>
           
-          {/* Modalidade and Produto */}
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-1">
-              <span className="pc-text-caption block">Modalidade</span>
-              <span className="pc-text-body font-medium">{contract.nomeTipoRubrica}</span>
-            </div>
-            
-            <div className="space-y-1">
-              <span className="pc-text-caption block">Produto</span>
-              <span className="pc-text-body font-medium">{contract.rubricaNome}</span>
-            </div>
+          {/* Produto and Modalidade */}
+          <div className="space-y-2">
+            <div className="pc-text-body font-medium">{contract.rubricaNome}</div>
+            <div className="pc-text-caption text-muted-foreground">{contract.nomeTipoRubrica}</div>
           </div>
           
-          {/* Parcelas and Valor da Parcela */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <span className="pc-text-caption block">Parcelas</span>
-              <span className="pc-text-body font-medium">{contract.parcelas}</span>
-            </div>
-            
-            <div className="space-y-1">
-              <span className="pc-text-caption block">Valor Parcela</span>
-              <span className="pc-text-body font-medium">{contract.valorParcelaFormatado}</span>
-            </div>
+          {/* Parcelas */}
+          <div className="space-y-1">
+            <span className="pc-text-caption block">Parcelas:</span>
+            <span className="pc-text-body font-medium">
+              {contract.parcelas} parcelas de {contract.valorParcelaFormatado}
+            </span>
           </div>
           
           {/* Valor Solicitado (Total) */}
