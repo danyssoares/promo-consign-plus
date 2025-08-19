@@ -24,7 +24,7 @@ interface ContractDisplay {
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("login");
   const [selectedContract, setSelectedContract] = useState<ContractDisplay | null>(null);
-  const [previousTab, setPreviousTab] = useState<string>("ativos");
+  const [previousTab, setPreviousTab] = useState<string>("aprovados");
 
   const handleLogin = () => {
     setCurrentScreen("dashboard");
@@ -51,7 +51,7 @@ const Index = () => {
         console.log("Suporte clicado");
         break;
       case "sair":
-        setPreviousTab("ativos"); // Reset to active contracts tab on logout
+        setPreviousTab("aprovados"); // Reset to approved contracts tab on logout
         setCurrentScreen("login");
         break;
     }

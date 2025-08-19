@@ -14,17 +14,38 @@ interface ContractDisplay {
   status: "active" | "inactive";
 }
 
+// Função para determinar a cor com base na situação do contrato
+const getContractColor = (situacao: string) => {
+  // Verde: Aprovado
+  if (situacao === "Aprovado") return "text-green-500";
+  
+  // Amarelo: Em análise
+  if (situacao === "Em análise") return "text-yellow-500";
+  
+  // Vermelho: Suspenso, Negado ou Cancelado
+  if (situacao === "Suspenso" || situacao === "Negado" || situacao === "Cancelado") return "text-red-500";
+  
+  // Cinza: Pendente de envio, Solicitação de portabilidade ou Aguardando Quitação
+  if (situacao === "Pendente de envio" || situacao === "Solicitação de portabilidade" || situacao === "Aguardando Quitação") return "text-gray-500";
+  
+  // Azul: Quitado
+  if (situacao === "Quitado") return "text-blue-500";
+  
+  // Cor padrão caso não se encaixe em nenhuma das categorias
+  return "text-muted-foreground";
+};
+
 export const ContractsScreen = ({
   onBack,
   onContractClick,
-  initialTab = "ativos"
+  initialTab = "aprovados"
 }: {
   onBack: () => void;
   onContractClick: (contract: ContractDisplay, currentTab: string) => void;
   initialTab?: string;
 }) => {
   const { getAuthorizationData, colaborador, getUsuarioLogado } = useAuth();
-  const [activeTab, setActiveTab] = useState<"ativos" | "inativos" | "todos">(initialTab as any);
+  const [activeTab, setActiveTab] = useState<"aprovados" | "analise" | "todos">(initialTab as any);
   const [contracts, setContracts] = useState<ContractDisplay[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,8 +137,8 @@ export const ContractsScreen = ({
             parcelas: 12,
             valorParcelaFormatado: "R$ 420,00",
             total: 5040.00,
-            situacao: "Aprovado",
-            status: "active"
+            situacao: "Em análise",
+            status: "inactive"
           },
           {
             id: "CT345678",
@@ -136,8 +157,8 @@ export const ContractsScreen = ({
             parcelas: 18,
             valorParcelaFormatado: "R$ 500,00",
             total: 9000.00,
-            situacao: "Aprovado",
-            status: "active"
+            situacao: "Aguardando Quitação",
+            status: "inactive"
           },
           {
             id: "CT567890",
@@ -159,8 +180,8 @@ export const ContractsScreen = ({
   }, []);
 
   const filteredContracts = contracts.filter(contract => {
-    if (activeTab === "ativos") return contract.situacao === "Aprovado";
-    if (activeTab === "inativos") return contract.situacao === "Cancelado" || contract.situacao === "Negado";
+    if (activeTab === "aprovados") return contract.situacao === "Aprovado";
+    if (activeTab === "analise") return contract.situacao === "Em análise";
     return true; // todos
   });
 
@@ -194,11 +215,11 @@ export const ContractsScreen = ({
       {/* Tabs */}
       <div className="flex space-x-1 mb-6 bg-muted p-1 rounded-lg">
         {[{
-        key: "ativos",
-        label: "Ativos"
+        key: "aprovados",
+        label: "Aprovados"
       }, {
-        key: "inativos",
-        label: "Inativos"
+        key: "analise",
+        label: "Em análise"
       }, {
         key: "todos",
         label: "Todos"
@@ -210,8 +231,8 @@ export const ContractsScreen = ({
 
       {/* Contracts Title */}
       <h2 className="pc-text-body font-semibold mb-4">
-        {activeTab === "ativos" ? "Contratos Ativos" : 
-         activeTab === "inativos" ? "Contratos Inativos" : 
+        {activeTab === "aprovados" ? "Contratos Aprovados" : 
+         activeTab === "analise" ? "Contratos Em Análise" : 
          "Todos os Contratos"}
       </h2>
 
@@ -221,8 +242,8 @@ export const ContractsScreen = ({
           <div className="pc-card text-center py-8">
             <Circle className="mx-auto text-muted-foreground mb-2" size={48} />
             <p className="pc-text-body text-muted-foreground">
-              {activeTab === "ativos" ? "Nenhum contrato ativo encontrado" : 
-               activeTab === "inativos" ? "Nenhum contrato inativo encontrado" : 
+              {activeTab === "aprovados" ? "Nenhum contrato aprovado encontrado" : 
+               activeTab === "analise" ? "Nenhum contrato em análise encontrado" : 
                "Nenhum contrato encontrado"}
             </p>
           </div>
@@ -240,10 +261,7 @@ export const ContractsScreen = ({
                 {/* Icon */}
                 <div className="p-2 bg-secondary rounded-lg">
                   <FileText 
-                    className={`${activeTab === "todos" 
-                      ? (contract.status === "active" ? "text-green-500" : "text-red-500")
-                      : "text-muted-foreground"
-                    }`} 
+                    className={getContractColor(contract.situacao)} 
                     size={20} 
                   />
                 </div>
@@ -254,7 +272,7 @@ export const ContractsScreen = ({
                     <div className="pc-text-body font-medium">
                       Nº: {contract.id}
                     </div>
-                    <div className="pc-text-caption text-xs text-muted-foreground">
+                    <div className={`pc-text-caption text-xs ${getContractColor(contract.situacao)}`}>
                       {contract.situacao}
                     </div>
                   </div>

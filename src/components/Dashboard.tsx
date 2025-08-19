@@ -43,9 +43,13 @@ export const Dashboard = () => {
         // Extrair os valores específicos
         const valorMargemCartao = colaborador.folhaColaborador ? colaborador.folhaColaborador.valorMargemCartao : 0;
         const valorMargemEmprestimo = colaborador.folhaColaborador ? colaborador.folhaColaborador.valorMargemEmprestimo : 0;
+
+        const valorMargemUtilizadoCartao = listaValorUtilizado[1].valorUtilizado || 0;
+        const valorMargemUtilizadoEmprestimo = listaValorUtilizado[0].valorUtilizado || 0;
+
         if (listaValorUtilizado.length >= 2) {
-          setValorMargemDisponivelCartao(valorMargemCartao - (listaValorUtilizado[1].valorUtilizado || 0));
-          setValorMargemDisponivelEmprestimo(valorMargemEmprestimo - (listaValorUtilizado[0].valorUtilizado || 0));
+          setValorMargemDisponivelCartao(valorMargemCartao - valorMargemUtilizadoCartao);
+          setValorMargemDisponivelEmprestimo(valorMargemEmprestimo - valorMargemUtilizadoEmprestimo);
         } else {
           setValorMargemDisponivelCartao(0);
           setValorMargemDisponivelEmprestimo(0);

@@ -18,7 +18,7 @@ interface Parcela {
   numero: number;
   data: string;
   valor: number;
-  status: "Pago" | "Pendente" | "Vencido";
+  status: string;
 }
 
 export const ContractDetail = ({ contract, onBack }: { 
@@ -59,12 +59,15 @@ export const ContractDetail = ({ contract, onBack }: {
   }, [contract.id, getAuthorizationData]);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Pago": return "text-green-600";
-      case "Pendente": return "text-yellow-600";
-      case "Vencido": return "text-red-600";
-      default: return "text-muted-foreground";
-    }
+    // Tratamento para os novos status vindos da API
+    if (status === "Pago" || status === "Paga") return "text-green-600";
+    if (status === "Vencido") return "text-red-600";
+    if (status === "Pendente") return "text-yellow-600";
+    if (status === "Paga parcialmente") return "text-yellow-600";
+    if (status === "à vencer") return "text-blue-600";
+    
+    // Para qualquer outro status, usamos uma cor neutra
+    return "text-muted-foreground";
   };
 
   // Função para formatar a data para o formato dd/MM/yyyy
@@ -185,7 +188,7 @@ export const ContractDetail = ({ contract, onBack }: {
     numero: parcela.parcela,
     data: formatParcelaDate(parcela.dataMesAnoReferencia),
     valor: parcela.valorParcela,
-    status: parcela.parcela <= qtdParcelasPagas ? "Pago" : "Pendente"
+    status: parcela.contratoParcelaSituacaoDTO?.nome || "à vencer"
   })) || [];
 
   return (

@@ -22,10 +22,15 @@ export interface Colaborador {
   pessoaFisica: PessoaFisica;
 }
 
+export interface ContratoParcelaSituacaoDTO {
+  nome: string;
+}
+
 export interface ContratoParcela {
   parcela: number;
   dataMesAnoReferencia: string; // formato MM/YYYY
   valorParcela: number;
+  contratoParcelaSituacaoDTO?: ContratoParcelaSituacaoDTO;
 }
 
 export interface ContratoSituacaoTipo {
@@ -37,6 +42,9 @@ export interface ContratoTaxa {
 }
 
 export interface Contrato {
+  qtdParcelasAutorizado: number;
+  valorParcelaAutorizado: number;
+  contratoParcelas: any;
   id: string;
   colaborador: Colaborador;
   dataHoraCriacao: string; // formato DD/MM/YYYY
