@@ -29,35 +29,29 @@ export const Dashboard = () => {
 
   // Calcular tempo de sessão
   useEffect(() => {
+    // Definir o momento de início da sessão
+    const sessionStartKey = 'sessionStartTime';
+    let sessionStartTime = sessionStorage.getItem(sessionStartKey);
+    
+    if (!sessionStartTime) {
+      sessionStartTime = new Date().toISOString();
+      sessionStorage.setItem(sessionStartKey, sessionStartTime);
+    }
+
     const calculateSessionTime = () => {
-      const lastLogin = getLastLogin();
-      if (lastLogin) {
-        const loginTime = new Date(lastLogin);
+      try {
+        const startTime = new Date(sessionStartTime!);
         const now = new Date();
-        const diffMs = now.getTime() - loginTime.getTime();
+        const diffMs = Math.max(0, now.getTime() - startTime.getTime());
         
         const hours = Math.floor(diffMs / (1000 * 60 * 60));
         const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
         
         setSessionTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-      } else {
-        // Se não tiver lastLogin, usar o tempo desde que o componente foi montado
-        const componentMountTime = sessionStorage.getItem('componentMountTime');
-        if (!componentMountTime) {
-          sessionStorage.setItem('componentMountTime', new Date().toISOString());
-          setSessionTime("00:00:01");
-        } else {
-          const mountTime = new Date(componentMountTime);
-          const now = new Date();
-          const diffMs = now.getTime() - mountTime.getTime();
-          
-          const hours = Math.floor(diffMs / (1000 * 60 * 60));
-          const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-          
-          setSessionTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-        }
+      } catch (error) {
+        console.error('Erro ao calcular tempo de sessão:', error);
+        setSessionTime("00:00:00");
       }
     };
 
@@ -68,7 +62,7 @@ export const Dashboard = () => {
     const interval = setInterval(calculateSessionTime, 1000);
     
     return () => clearInterval(interval);
-  }, [getLastLogin]);
+  }, []);
 
   useEffect(() => {
     const fetchLimitesUtilizados = async () => {
