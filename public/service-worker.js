@@ -1,6 +1,6 @@
 // Service worker para PromoConsign Plus
 
-const CACHE_NAME = 'promo-consign-plus-v1';
+const CACHE_NAME = 'promo-consign-plus-v2';
 const urlsToCache = [
   '/',
   '/index.html',
