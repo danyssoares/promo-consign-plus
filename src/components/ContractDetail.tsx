@@ -18,6 +18,7 @@ interface Parcela {
   numero: number;
   data: string;
   valor: number;
+  valorPago?: number;
   status: string;
 }
 
@@ -188,6 +189,7 @@ export const ContractDetail = ({ contract, onBack }: {
     numero: parcela.parcela,
     data: formatParcelaDate(parcela.dataMesAnoReferencia),
     valor: parcela.valorParcela,
+    valorPago: parcela.valorPagoParcela,
     status: parcela.contratoParcelaSituacaoDTO?.nome || "à vencer"
   })) || [];
 
@@ -335,20 +337,37 @@ export const ContractDetail = ({ contract, onBack }: {
             {showParcelas && (
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {parcelas.map((parcela) => (
-                  <div key={parcela.numero} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="pc-text-body font-medium text-xs w-8">{parcela.numero}ª</span>
-                      <div>
-                        <div className="pc-text-body font-medium text-xs">{parcela.data}</div>
-                        <div className="pc-text-caption text-xs">R$ {parcela.valor.toLocaleString("pt-BR", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })}</div>
+                  <div key={parcela.numero} className="p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <span className="pc-text-body font-medium text-xs w-8">{parcela.numero}ª</span>
+                        <div>
+                          <div className="pc-text-body font-medium text-xs">{parcela.data}</div>
+                          <div className="pc-text-caption text-xs">R$ {parcela.valor.toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}</div>
+                        </div>
                       </div>
+                      <span className={`pc-text-caption font-medium text-xs ${getStatusColor(parcela.status)}`}>
+                        {parcela.status}
+                      </span>
                     </div>
-                    <span className={`pc-text-caption font-medium text-xs ${getStatusColor(parcela.status)}`}>
-                      {parcela.status}
-                    </span>
+                    
+                    {/* Mostrar valor pago se existir */}
+                    {parcela.valorPago !== undefined && parcela.valorPago !== null && (
+                      <div className="mt-2 pt-2 border-t border-muted">
+                        <div className="flex items-center justify-between">
+                          <span className="pc-text-caption text-xs text-muted-foreground">Valor Pago:</span>
+                          <span className="pc-text-caption font-medium text-xs text-green-600">
+                            R$ {parcela.valorPago.toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
