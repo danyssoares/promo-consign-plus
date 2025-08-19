@@ -177,8 +177,8 @@ export const ContractDetail = ({ contract, onBack }: {
     : "-";
   const valorPresente = contrato.valorPresente || 0;
   const situacao = contrato.contratoSituacaoTipo?.nome || "Não informado";
-  const valorParcelaAutorizado = convenioData.valorParcelaAutorizado || 0;
-  const qtdParcelasAutorizado = convenioData.qtdParcelasAutorizado || 0;
+  const valorParcelaAutorizado = contrato.valorParcelaAutorizado || 0;
+  const qtdParcelasAutorizado = contrato.qtdParcelasAutorizado || 0;
   
   // Calcular o status com base na situação
   const status = situacao === "Aprovado" ? "active" : "inactive";
