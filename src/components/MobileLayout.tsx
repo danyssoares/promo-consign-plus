@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Home, FileText, HelpCircle, LogOut } from "lucide-react";
+import { Home, FileText, Package, LogOut } from "lucide-react";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 
 interface MobileLayoutProps {
@@ -27,7 +27,7 @@ const Tabbar = ({ currentTab, onTabChange }: { currentTab?: string; onTabChange?
   const tabs = [
     { id: "home", label: "Início", icon: Home },
     { id: "contratos", label: "Contratos", icon: FileText },
-    { id: "suporte", label: "Suporte", icon: HelpCircle },
+    { id: "produtos", label: "Produtos", icon: Package },
     { id: "sair", label: "Sair", icon: LogOut },
   ];
 

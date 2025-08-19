@@ -5,9 +5,10 @@ import { ForgotPasswordScreen } from "@/components/ForgotPasswordScreen";
 import { Dashboard } from "@/components/Dashboard";
 import { ContractsScreen } from "@/components/ContractsScreen";
 import { ContractDetail } from "@/components/ContractDetail";
+import { ProductsScreen } from "@/components/ProductsScreen";
 import { MobileLayout } from "@/components/MobileLayout";
 
-type Screen = "login" | "forgot-password" | "dashboard" | "contracts" | "contract-detail";
+type Screen = "login" | "forgot-password" | "dashboard" | "contracts" | "contract-detail" | "products";
 
 // Definindo a interface do contrato com os campos corretos
 interface ContractDisplay {
@@ -46,9 +47,8 @@ const Index = () => {
       case "contratos":
         setCurrentScreen("contracts");
         break;
-      case "suporte":
-        // Pode ser implementado futuramente
-        console.log("Suporte clicado");
+      case "produtos":
+        setCurrentScreen("products");
         break;
       case "sair":
         setPreviousTab("aprovados"); // Reset to approved contracts tab on logout
@@ -107,6 +107,15 @@ const Index = () => {
                 onBack={() => setCurrentScreen("contracts")}
               />
             )}
+          </MobileLayout>
+        );
+      
+      case "products":
+        return (
+          <MobileLayout showTabbar currentTab="produtos" onTabChange={handleTabChange}>
+            <ProductsScreen 
+              onBack={() => setCurrentScreen("dashboard")}
+            />
           </MobileLayout>
         );
       
