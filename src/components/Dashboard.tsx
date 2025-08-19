@@ -3,12 +3,14 @@ import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { convenioService, LimiteUtilizado } from "@/services/convenioService";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 
 export const Dashboard = () => {
   const {
     getUsuarioLogado,
     getAuthorizationData,
-    colaborador
+    colaborador,
+    getLastLogin
   } = useAuth();
   const userData = getUsuarioLogado();
   const authToken = getAuthorizationData();
@@ -17,12 +19,56 @@ export const Dashboard = () => {
   const [valorMargemDisponivelEmprestimo, setValorMargemDisponivelEmprestimo] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionTime, setSessionTime] = useState<string>("00:00:00");
 
   // Extrair login do objeto Global se existir
   const userLogin = (userData as { Global?: { login?: string } })?.Global?.login || (userData as { login?: string })?.login || (userData as { nome?: string })?.nome || "Usuário";
   const months = ["Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const marginData = [40, 65, 30, 80, 45, 70];
   const creditData = [60, 45, 70, 55, 85, 40];
+
+  // Calcular tempo de sessão
+  useEffect(() => {
+    const calculateSessionTime = () => {
+      const lastLogin = getLastLogin();
+      if (lastLogin) {
+        const loginTime = new Date(lastLogin);
+        const now = new Date();
+        const diffMs = now.getTime() - loginTime.getTime();
+        
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+        
+        setSessionTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      } else {
+        // Se não tiver lastLogin, usar o tempo desde que o componente foi montado
+        const componentMountTime = sessionStorage.getItem('componentMountTime');
+        if (!componentMountTime) {
+          sessionStorage.setItem('componentMountTime', new Date().toISOString());
+          setSessionTime("00:00:01");
+        } else {
+          const mountTime = new Date(componentMountTime);
+          const now = new Date();
+          const diffMs = now.getTime() - mountTime.getTime();
+          
+          const hours = Math.floor(diffMs / (1000 * 60 * 60));
+          const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+          
+          setSessionTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        }
+      }
+    };
+
+    // Calcular imediatamente
+    calculateSessionTime();
+    
+    // Atualizar a cada segundo
+    const interval = setInterval(calculateSessionTime, 1000);
+    
+    return () => clearInterval(interval);
+  }, [getLastLogin]);
 
   useEffect(() => {
     const fetchLimitesUtilizados = async () => {
@@ -90,41 +136,51 @@ export const Dashboard = () => {
               <span className="pc-text-body text-foreground text-xs font-medium">{userLogin}</span>
             </div>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-4 bg-background border border-border shadow-lg" align="end">
-            <div className="space-y-4">
-              <div className="text-center pb-3 border-b border-border">
-                <h3 className="pc-text-body font-semibold text-primary">
-                  Olá, {colaborador?.pessoaFisica?.pessoa?.nome || userData?.nome || "Usuário"}!
+          <PopoverContent className="w-80 p-0 bg-background border border-border shadow-lg" align="end">
+            <div className="p-4">
+              {/* Header */}
+              <div className="text-center pb-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <User className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="pc-text-body font-semibold text-foreground">
+                  {colaborador?.pessoaFisica?.pessoa?.nome || userData?.nome || "Usuário"}
                 </h3>
-                <p className="pc-text-caption text-muted-foreground">
-                  {colaborador?.pessoaFisica?.pessoa?.documentoFederal?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") || "CPF não informado"}
+                <p className="pc-text-caption text-muted-foreground mt-1">
+                  Informações da Sessão
                 </p>
               </div>
               
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="pc-text-caption text-muted-foreground">Login:</span>
-                  <span className="pc-text-body font-medium text-xs">{userLogin}</span>
+              <Separator className="mb-4" />
+              
+              {/* Dados do usuário */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <span className="pc-text-caption text-muted-foreground block">Login</span>
+                    <span className="pc-text-body font-medium text-foreground text-sm">{userLogin}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="pc-text-caption text-muted-foreground block">Matrícula</span>
+                    <span className="pc-text-body font-medium text-foreground text-sm">
+                      {colaborador?.pessoaFisica?.pessoa?.id || colaborador?.matricula || "Não informado"}
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <span className="pc-text-caption text-muted-foreground">CPF:</span>
-                  <span className="pc-text-body font-medium text-xs">
+                <div className="space-y-1">
+                  <span className="pc-text-caption text-muted-foreground block">CPF</span>
+                  <span className="pc-text-body font-medium text-foreground">
                     {colaborador?.pessoaFisica?.pessoa?.documentoFederal?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") || "Não informado"}
                   </span>
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <span className="pc-text-caption text-muted-foreground">Mat:</span>
-                  <span className="pc-text-body font-medium text-xs">
-                    {colaborador?.pessoaFisica?.pessoa?.id || colaborador?.matricula || "Não informado"}
-                  </span>
-                </div>
+                <Separator />
                 
-                <div className="flex justify-between items-center">
-                  <span className="pc-text-caption text-muted-foreground">Sessão:</span>
-                  <span className="pc-text-body font-medium text-xs">
-                    {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                <div className="bg-muted/30 rounded-lg p-3 text-center">
+                  <span className="pc-text-caption text-muted-foreground block mb-1">Tempo de Sessão</span>
+                  <span className="pc-text-body font-mono font-semibold text-primary text-lg">
+                    {sessionTime}
                   </span>
                 </div>
               </div>
