@@ -67,21 +67,49 @@ export const ContractDetail = ({ contract, onBack }: {
     }
   };
 
-  // Função para formatar a data de DD/MM/YYYY para exibição
+  // Função para formatar a data para o formato dd/MM/yyyy
   const formatDate = (dateString: string): string => {
+    // Se já estiver no formato DD/MM/YYYY, garantir que o dia e mês tenham 2 dígitos
     const parts = dateString.split('/');
     if (parts.length === 3) {
-      return `${parts[0]}/${parts[1]}/${parts[2]}`;
+      // Garantir que o dia e mês tenham 2 dígitos
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      return `${day}/${month}/${year}`;
+    }
+    // Se for uma data em outro formato, tentar parsear
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     }
     return dateString;
   };
 
-  // Função para formatar a data de MM/YYYY para exibição das parcelas
+  // Função para formatar a data para o formato MM/yyyy
   const formatParcelaDate = (dateString: string): string => {
+    // Se estiver no formato yyyy-MM-dd, converter para MM/yyyy
+    if (dateString.includes('-')) {
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        const year = parts[0];
+        const month = parts[1];
+        return `${month}/${year}`;
+      }
+    }
+    
+    // Se já estiver no formato MM/YYYY, apenas formatar
     const parts = dateString.split('/');
     if (parts.length === 2) {
-      return `${parts[1]}/${parts[0]}`;
+      // Garantir que o mês tenha 2 dígitos
+      const month = parts[0].padStart(2, '0');
+      const year = parts[1];
+      return `${month}/${year}`;
     }
+    
     return dateString;
   };
 
@@ -141,17 +169,19 @@ export const ContractDetail = ({ contract, onBack }: {
   const dataCriacao = contrato.dataHoraCriacao ? formatDate(contrato.dataHoraCriacao) : "Não informado";
   const qtdParcelasPagas = contrato.qtdParcelasPagas || 0;
   const valorTotalAutorizado = contrato.valorTotalAutorizado || 0;
-  const cetMensal = contrato.contratoTaxa?.valorCetMensalAutorizado?.toFixed(2).replace('.', ',') + '%' || "Não informado";
+  const cetMensal = contrato.contratoTaxa?.valorCetMensalAutorizado !== undefined && contrato.contratoTaxa?.valorCetMensalAutorizado !== null 
+    ? contrato.contratoTaxa?.valorCetMensalAutorizado?.toFixed(2).replace('.', ',') + '%' 
+    : "-";
   const valorPresente = contrato.valorPresente || 0;
   const situacao = contrato.contratoSituacaoTipo?.nome || "Não informado";
-  const valorParcelaAutorizado = convenioData.valorParcelaAutorizado || 0;
-  const qtdParcelasAutorizado = convenioData.qtdParcelasAutorizado || 0;
+  const valorParcelaAutorizado = contrato.valorParcelaAutorizado || 0;
+  const qtdParcelasAutorizado = contrato.qtdParcelasAutorizado || 0;
   
   // Calcular o status com base na situação
   const status = situacao === "Aprovado" ? "active" : "inactive";
 
   // Preparar as parcelas para exibição
-  const parcelas: Parcela[] = contrato.contratosParcelas?.map((parcela: ContratoParcela) => ({
+  const parcelas: Parcela[] = contrato.contratoParcelas?.map((parcela: ContratoParcela) => ({
     numero: parcela.parcela,
     data: formatParcelaDate(parcela.dataMesAnoReferencia),
     valor: parcela.valorParcela,
@@ -189,7 +219,7 @@ export const ContractDetail = ({ contract, onBack }: {
             </div>
 
             <div className="space-y-1">
-              <span className="pc-text-caption block">Nome</span>
+              <span className="pc-text-caption block">Colaborador</span>
               <span className="pc-text-body font-medium">{nomeColaborador}</span>
             </div>
 
@@ -199,7 +229,7 @@ export const ContractDetail = ({ contract, onBack }: {
                 <span className="pc-text-body font-medium text-xs">{nomeConvenio}</span>
               </div>
               <div className="space-y-1">
-                <span className="pc-text-caption block">Data</span>
+                <span className="pc-text-caption block">Data da Solicitação</span>
                 <span className="pc-text-body font-medium text-xs">{dataCriacao}</span>
               </div>
             </div>
@@ -286,40 +316,42 @@ export const ContractDetail = ({ contract, onBack }: {
         </div>
 
         {/* Lista de Parcelas */}
-        <div className="pc-card">
-          <button
-            onClick={() => setShowParcelas(!showParcelas)}
-            className="flex items-center justify-between w-full mb-4"
-          >
-            <div className="flex items-center gap-2">
-              <Calendar className="text-primary" size={20} />
-              <h2 className="pc-text-body font-semibold">Parcelas ({parcelas.length})</h2>
-            </div>
-            <ChevronDown className={`text-muted-foreground transition-transform ${showParcelas ? 'rotate-180' : ''}`} size={20} />
-          </button>
+        {parcelas.length > 0 && (
+          <div className="pc-card">
+            <button
+              onClick={() => setShowParcelas(!showParcelas)}
+              className="flex items-center justify-between w-full mb-4"
+            >
+              <div className="flex items-center gap-2">
+                <Calendar className="text-primary" size={20} />
+                <h2 className="pc-text-body font-semibold">Parcelas ({parcelas.length})</h2>
+              </div>
+              <ChevronDown className={`text-muted-foreground transition-transform ${showParcelas ? 'rotate-180' : ''}`} size={20} />
+            </button>
 
-          {showParcelas && (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {parcelas.map((parcela) => (
-                <div key={parcela.numero} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="pc-text-body font-medium text-xs w-8">{parcela.numero}ª</span>
-                    <div>
-                      <div className="pc-text-body font-medium text-xs">{parcela.data}</div>
-                      <div className="pc-text-caption text-xs">R$ {parcela.valor.toLocaleString("pt-BR", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                      })}</div>
+            {showParcelas && (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {parcelas.map((parcela) => (
+                  <div key={parcela.numero} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <span className="pc-text-body font-medium text-xs w-8">{parcela.numero}ª</span>
+                      <div>
+                        <div className="pc-text-body font-medium text-xs">{parcela.data}</div>
+                        <div className="pc-text-caption text-xs">R$ {parcela.valor.toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}</div>
+                      </div>
                     </div>
+                    <span className={`pc-text-caption font-medium text-xs ${getStatusColor(parcela.status)}`}>
+                      {parcela.status}
+                    </span>
                   </div>
-                  <span className={`pc-text-caption font-medium text-xs ${getStatusColor(parcela.status)}`}>
-                    {parcela.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
