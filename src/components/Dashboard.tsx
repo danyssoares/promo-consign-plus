@@ -29,18 +29,14 @@ export const Dashboard = () => {
 
   // Calcular tempo de sessão
   useEffect(() => {
-    // Definir o momento de início da sessão
+    // Definir o momento de início da sessão - sempre criar um novo ao montar o componente
     const sessionStartKey = 'sessionStartTime';
-    let sessionStartTime = sessionStorage.getItem(sessionStartKey);
-    
-    if (!sessionStartTime) {
-      sessionStartTime = new Date().toISOString();
-      sessionStorage.setItem(sessionStartKey, sessionStartTime);
-    }
+    const sessionStartTime = new Date().toISOString();
+    sessionStorage.setItem(sessionStartKey, sessionStartTime);
 
     const calculateSessionTime = () => {
       try {
-        const startTime = new Date(sessionStartTime!);
+        const startTime = new Date(sessionStartTime);
         const now = new Date();
         const diffMs = Math.max(0, now.getTime() - startTime.getTime());
         
@@ -62,7 +58,7 @@ export const Dashboard = () => {
     const interval = setInterval(calculateSessionTime, 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [userData, colaborador]); // Reiniciar quando há mudanças no usuário/colaborador
 
   useEffect(() => {
     const fetchLimitesUtilizados = async () => {

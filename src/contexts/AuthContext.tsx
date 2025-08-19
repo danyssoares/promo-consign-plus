@@ -43,6 +43,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUsuarioLogadoState(usuario);
     if (usuario) {
       localStorage.setItem('userData', JSON.stringify(usuario));
+      // Zerar contador de sessão a cada novo login
+      sessionStorage.removeItem('sessionStartTime');
     } else {
       localStorage.removeItem('userData');
     }
@@ -101,6 +103,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setAuthorizationData(null);
     setColaborador(null);
     setListaMatriculasColaborador([]);
+    // Limpar o contador de sessão no logout
+    sessionStorage.removeItem('sessionStartTime');
     // Não limpar o lastLogin no logout para manter para próximo acesso
   };
 
