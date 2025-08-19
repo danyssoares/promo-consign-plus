@@ -30,6 +30,7 @@ export interface ContratoParcela {
   parcela: number;
   dataMesAnoReferencia: string; // formato MM/YYYY
   valorParcela: number;
+  valorPagoParcela?: number;
   contratoParcelaSituacaoDTO?: ContratoParcelaSituacaoDTO;
 }
 
