@@ -1,5 +1,7 @@
 import { ArrowLeft, Calendar, CreditCard, User, Building, FileText, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { convenioService, ConvenioResponse, ContratoParcela } from "@/services/convenioService";
 
 interface ContractDisplay {
   id: string; // Número do Contrato
@@ -23,27 +25,38 @@ export const ContractDetail = ({ contract, onBack }: {
   contract: ContractDisplay; 
   onBack: () => void;
 }) => {
+  const { getAuthorizationData } = useAuth();
   const [showParcelas, setShowParcelas] = useState(false);
+  const [convenioData, setConvenioData] = useState<ConvenioResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - em produção estes dados viriam da API
-  const mockData = {
-    consignataria: "Banco PromoConsig",
-    nome: "João da Silva Santos",
-    convenio: "Prefeitura Municipal",
-    colaborador: "João da Silva Santos",
-    data: "15/03/2024",
-    parcelasPagas: 8,
-    cetMensal: "2,15%",
-    valorPresente: 7200.50
-  };
+  // Carregar os dados do contrato quando o componente montar
+  useEffect(() => {
+    const fetchContractDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const authToken = getAuthorizationData();
+        
+        if (!authToken) {
+          throw new Error("Token de autenticação não encontrado");
+        }
 
-  // Mock parcelas data
-  const parcelas: Parcela[] = Array.from({ length: contract.parcelas }, (_, i) => ({
-    numero: i + 1,
-    data: new Date(2024, 2 + i, 15).toLocaleDateString('pt-BR'),
-    valor: parseFloat(contract.valorParcelaFormatado.replace('R$ ', '').replace(',', '.')),
-    status: i < 8 ? "Pago" : "Pendente"
-  }));
+        // Buscar os detalhes do contrato usando o ID
+        const data = await convenioService.buscarContrato(contract.id, authToken);
+        setConvenioData(data);
+      } catch (err) {
+        console.error("Erro ao buscar detalhes do contrato:", err);
+        setError("Falha ao carregar os detalhes do contrato");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContractDetails();
+  }, [contract.id, getAuthorizationData]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -53,6 +66,97 @@ export const ContractDetail = ({ contract, onBack }: {
       default: return "text-muted-foreground";
     }
   };
+
+  // Função para formatar a data de DD/MM/YYYY para exibição
+  const formatDate = (dateString: string): string => {
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      return `${parts[0]}/${parts[1]}/${parts[2]}`;
+    }
+    return dateString;
+  };
+
+  // Função para formatar a data de MM/YYYY para exibição das parcelas
+  const formatParcelaDate = (dateString: string): string => {
+    const parts = dateString.split('/');
+    if (parts.length === 2) {
+      return `${parts[1]}/${parts[0]}`;
+    }
+    return dateString;
+  };
+
+  // Se estiver carregando, mostrar um indicador
+  if (loading) {
+    return (
+      <div className="pc-container max-w-sm mx-auto flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Carregando detalhes do contrato...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se houver erro, mostrar mensagem
+  if (error) {
+    return (
+      <div className="pc-container max-w-sm mx-auto">
+        <div className="flex items-center gap-4 py-4">
+          <button onClick={onBack}>
+            <ArrowLeft className="text-foreground" size={24} />
+          </button>
+          <h1 className="pc-text-title">Detalhes do Contrato</h1>
+        </div>
+        <div className="pc-card bg-destructive/10 border-destructive/20 mb-4">
+          <p className="text-destructive text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não tiver dados do convênio, mostrar mensagem
+  if (!convenioData || !convenioData.contratos || convenioData.contratos.length === 0) {
+    return (
+      <div className="pc-container max-w-sm mx-auto">
+        <div className="flex items-center gap-4 py-4">
+          <button onClick={onBack}>
+            <ArrowLeft className="text-foreground" size={24} />
+          </button>
+          <h1 className="pc-text-title">Detalhes do Contrato</h1>
+        </div>
+        <div className="pc-card">
+          <p className="text-sm text-muted-foreground">Dados do contrato não encontrados</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Pegar o primeiro contrato (como especificado nos requisitos)
+  const contrato = convenioData.contratos[0];
+  
+  // Formatar os dados para exibição
+  const consignatariaNome = convenioData.convenioDTO?.consignataria?.nomeFantasia || "Não informado";
+  const nomeConvenio = convenioData.convenioDTO?.nome || "Não informado";
+  const nomeColaborador = contrato.colaborador?.pessoaFisica?.pessoa?.nome || "Não informado";
+  const dataCriacao = contrato.dataHoraCriacao ? formatDate(contrato.dataHoraCriacao) : "Não informado";
+  const qtdParcelasPagas = contrato.qtdParcelasPagas || 0;
+  const valorTotalAutorizado = contrato.valorTotalAutorizado || 0;
+  const cetMensal = contrato.contratoTaxa?.valorCetMensalAutorizado?.toFixed(2).replace('.', ',') + '%' || "Não informado";
+  const valorPresente = contrato.valorPresente || 0;
+  const situacao = contrato.contratoSituacaoTipo?.nome || "Não informado";
+  const valorParcelaAutorizado = convenioData.valorParcelaAutorizado || 0;
+  const qtdParcelasAutorizado = convenioData.qtdParcelasAutorizado || 0;
+  
+  // Calcular o status com base na situação
+  const status = situacao === "Aprovado" ? "active" : "inactive";
+
+  // Preparar as parcelas para exibição
+  const parcelas: Parcela[] = contrato.contratosParcelas?.map((parcela: ContratoParcela) => ({
+    numero: parcela.parcela,
+    data: formatParcelaDate(parcela.dataMesAnoReferencia),
+    valor: parcela.valorParcela,
+    status: parcela.parcela <= qtdParcelasPagas ? "Pago" : "Pendente"
+  })) || [];
 
   return (
     <div className="pc-container max-w-sm mx-auto">
@@ -76,27 +180,27 @@ export const ContractDetail = ({ contract, onBack }: {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <span className="pc-text-caption block">Consignatária</span>
-                <span className="pc-text-body font-medium text-xs">{mockData.consignataria}</span>
+                <span className="pc-text-body font-medium text-xs">{consignatariaNome}</span>
               </div>
               <div className="space-y-1">
                 <span className="pc-text-caption block">Nº Contrato</span>
-                <span className="pc-text-body font-medium text-xs">{contract.id}</span>
+                <span className="pc-text-body font-medium text-xs">{contrato.id}</span>
               </div>
             </div>
 
             <div className="space-y-1">
               <span className="pc-text-caption block">Nome</span>
-              <span className="pc-text-body font-medium">{mockData.nome}</span>
+              <span className="pc-text-body font-medium">{nomeColaborador}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <span className="pc-text-caption block">Convênio</span>
-                <span className="pc-text-body font-medium text-xs">{mockData.convenio}</span>
+                <span className="pc-text-body font-medium text-xs">{nomeConvenio}</span>
               </div>
               <div className="space-y-1">
                 <span className="pc-text-caption block">Data</span>
-                <span className="pc-text-body font-medium text-xs">{mockData.data}</span>
+                <span className="pc-text-body font-medium text-xs">{dataCriacao}</span>
               </div>
             </div>
           </div>
@@ -119,14 +223,14 @@ export const ContractDetail = ({ contract, onBack }: {
               <div className="space-y-1">
                 <span className="pc-text-caption block">Situação</span>
                 <span className={`pc-text-body font-medium text-xs ${
-                  contract.status === "active" ? "text-green-600" : "text-red-600"
+                  status === "active" ? "text-green-600" : "text-red-600"
                 }`}>
-                  {contract.situacao}
+                  {situacao}
                 </span>
               </div>
               <div className="space-y-1">
                 <span className="pc-text-caption block">CET Mensal</span>
-                <span className="pc-text-body font-medium text-xs">{mockData.cetMensal}</span>
+                <span className="pc-text-body font-medium text-xs">{cetMensal}</span>
               </div>
             </div>
           </div>
@@ -143,22 +247,25 @@ export const ContractDetail = ({ contract, onBack }: {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <span className="pc-text-caption block">Valor Parcela</span>
-                <span className="pc-text-body font-medium text-xs">{contract.valorParcelaFormatado}</span>
+                <span className="pc-text-body font-medium text-xs">R$ {valorParcelaAutorizado.toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}</span>
               </div>
               <div className="space-y-1">
                 <span className="pc-text-caption block">Qtde Parcelas</span>
-                <span className="pc-text-body font-medium text-xs">{contract.parcelas}</span>
+                <span className="pc-text-body font-medium text-xs">{qtdParcelasAutorizado}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <span className="pc-text-caption block">Pagas</span>
-                <span className="pc-text-body font-medium text-xs text-green-600">{mockData.parcelasPagas}</span>
+                <span className="pc-text-body font-medium text-xs text-green-600">{qtdParcelasPagas}</span>
               </div>
               <div className="space-y-1">
                 <span className="pc-text-caption block">Valor Presente</span>
-                <span className="pc-text-body font-medium text-xs">R$ {mockData.valorPresente.toLocaleString("pt-BR", {
+                <span className="pc-text-body font-medium text-xs">R$ {valorPresente.toLocaleString("pt-BR", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2
                 })}</span>
@@ -169,7 +276,7 @@ export const ContractDetail = ({ contract, onBack }: {
             <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
               <div className="text-center space-y-1">
                 <span className="pc-text-caption block text-primary">Valor Solicitado</span>
-                <span className="pc-text-value text-2xl text-primary">R$ {contract.total.toLocaleString("pt-BR", {
+                <span className="pc-text-value text-2xl text-primary">R$ {valorTotalAutorizado.toLocaleString("pt-BR", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2
                 })}</span>
@@ -186,7 +293,7 @@ export const ContractDetail = ({ contract, onBack }: {
           >
             <div className="flex items-center gap-2">
               <Calendar className="text-primary" size={20} />
-              <h2 className="pc-text-body font-semibold">Parcelas ({contract.parcelas})</h2>
+              <h2 className="pc-text-body font-semibold">Parcelas ({parcelas.length})</h2>
             </div>
             <ChevronDown className={`text-muted-foreground transition-transform ${showParcelas ? 'rotate-180' : ''}`} size={20} />
           </button>
