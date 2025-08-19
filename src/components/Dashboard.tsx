@@ -2,6 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { convenioService, LimiteUtilizado } from "@/services/convenioService";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export const Dashboard = () => {
   const {
@@ -80,12 +81,56 @@ export const Dashboard = () => {
         <img src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" alt="PromoConsig Logo" className="h-12 w-auto" />
         
         {/* User Info */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-muted-foreground" />
-          </div>
-          <span className="pc-text-body text-foreground text-xs font-medium">{userLogin}</span>
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <div className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors">
+              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <span className="pc-text-body text-foreground text-xs font-medium">{userLogin}</span>
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-4" align="end">
+            <div className="space-y-4">
+              <div className="text-center pb-3 border-b border-border">
+                <h3 className="pc-text-body font-semibold text-primary">
+                  Olá, {colaborador?.pessoaFisica?.pessoa?.nome || userData?.nome || "Usuário"}!
+                </h3>
+                <p className="pc-text-caption text-muted-foreground">
+                  {colaborador?.pessoaFisica?.pessoa?.documentoFederal?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") || "CPF não informado"}
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="pc-text-caption text-muted-foreground">Login:</span>
+                  <span className="pc-text-body font-medium text-xs">{userLogin}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="pc-text-caption text-muted-foreground">CPF:</span>
+                  <span className="pc-text-body font-medium text-xs">
+                    {colaborador?.pessoaFisica?.pessoa?.documentoFederal?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") || "Não informado"}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="pc-text-caption text-muted-foreground">Mat:</span>
+                  <span className="pc-text-body font-medium text-xs">
+                    {colaborador?.pessoaFisica?.pessoa?.id || colaborador?.matricula || "Não informado"}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="pc-text-caption text-muted-foreground">Sessão:</span>
+                  <span className="pc-text-body font-medium text-xs">
+                    {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Margem Consignável Card */}

@@ -128,10 +128,11 @@ export class BiometricService {
         documentoFederal = documento.replace(/[.\-/]/g, '');
         
         // Buscar matrículas do colaborador
-        matriculas = await colaboradorService.buscarPorMatricula(
+        const colaboradorData = await colaboradorService.buscarPorMatricula(
           documentoFederal, 
           loginResponse.access_token
         );
+        matriculas = colaboradorData ? [colaboradorData] : [];
       }
 
       return {

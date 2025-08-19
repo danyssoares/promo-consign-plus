@@ -174,14 +174,14 @@ export const ContractDetail = ({ contract, onBack }: {
     : "-";
   const valorPresente = contrato.valorPresente || 0;
   const situacao = contrato.contratoSituacaoTipo?.nome || "Não informado";
-  const valorParcelaAutorizado = contrato.valorParcelaAutorizado || 0;
-  const qtdParcelasAutorizado = contrato.qtdParcelasAutorizado || 0;
+  const valorParcelaAutorizado = convenioData.valorParcelaAutorizado || 0;
+  const qtdParcelasAutorizado = convenioData.qtdParcelasAutorizado || 0;
   
   // Calcular o status com base na situação
   const status = situacao === "Aprovado" ? "active" : "inactive";
 
   // Preparar as parcelas para exibição
-  const parcelas: Parcela[] = contrato.contratoParcelas?.map((parcela: ContratoParcela) => ({
+  const parcelas: Parcela[] = contrato.contratosParcelas?.map((parcela: ContratoParcela) => ({
     numero: parcela.parcela,
     data: formatParcelaDate(parcela.dataMesAnoReferencia),
     valor: parcela.valorParcela,
