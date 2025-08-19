@@ -1,10 +1,11 @@
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Fingerprint } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { loginService, UserData } from "@/services/loginService";
 import { colaboradorService, MatriculaData } from "@/services/colaboradorService";
 import { useToast } from "@/hooks/use-toast";
 import { SelectMatriculaModal } from "@/components/SelectMatriculaModal";
+import { BiometricService } from "@/services/biometricService";
 
 export const LoginScreen = ({ onLogin, onForgotPassword }: { 
   onLogin: () => void;
@@ -19,6 +20,8 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
   const [documentoFederal, setDocumentoFederal] = useState("");
   const [authToken, setAuthToken] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
   
   const { setUsuarioLogado, setAuthorizationData, setLastLogin, getLastLogin, setColaborador, getUsuarioLogado } = useAuth();
   const { toast } = useToast();
@@ -30,6 +33,25 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       setUsername(lastLoginSaved);
     }
   }, [getLastLogin]);
+
+  // Verificar disponibilidade da biometria
+  useEffect(() => {
+    const checkBiometricAvailability = async () => {
+      try {
+        const available = await BiometricService.isBiometricAvailable();
+        setIsBiometricAvailable(available);
+        
+        if (available) {
+          const enabled = await BiometricService.isBiometricEnabled();
+          setIsBiometricEnabled(enabled);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar biometria:', error);
+      }
+    };
+
+    checkBiometricAvailability();
+  }, []);
 
   const handleSelectMatricula = async (matricula: MatriculaData) => {
     try {
@@ -86,6 +108,119 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
   const handleCancelMatricula = () => {
     setShowMatriculaModal(false);
     setIsLoading(false);
+  };
+
+  const handleBiometricLogin = async () => {
+    if (!isBiometricAvailable) {
+      toast({
+        title: "Biometria não disponível",
+        description: "A biometria não está disponível neste dispositivo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await BiometricService.biometricLogin();
+      
+      if (!result) {
+        toast({
+          title: "Erro no login biométrico",
+          description: "Não foi possível realizar o login com biometria.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const { userData: biometricUserData, authToken: biometricAuthToken, documentoFederal: biometricDocumento, matriculas: biometricMatriculas } = result;
+
+      // Armazenar dados temporariamente
+      setUserData(biometricUserData);
+      setAuthToken(biometricAuthToken);
+      
+      // Store auth data
+      setUsuarioLogado(biometricUserData);
+      setAuthorizationData(biometricAuthToken);
+      setLastLogin(biometricUserData.login); // Salvar último login usado
+
+      // Verificar se temos documento federal e matrículas
+      if (biometricDocumento && biometricMatriculas) {
+        setDocumentoFederal(biometricDocumento);
+        
+        if (biometricMatriculas && Array.isArray(biometricMatriculas)) {
+          if (biometricMatriculas.length === 0) {
+            // Nenhuma matrícula encontrada
+            toast({
+              title: "Nenhuma matrícula encontrada",
+              description: "Não foi possível encontrar matrículas para este colaborador.",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          } else if (biometricMatriculas.length === 1) {
+            // Apenas uma matrícula, selecionar automaticamente
+            const matricula = biometricMatriculas[0];
+            const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(
+              biometricDocumento, 
+              matricula.codigoMatricula, 
+              biometricAuthToken
+            );
+            
+            if (colaboradorDetalhe) {
+              // Salvar dados do colaborador no contexto
+              setColaborador(colaboradorDetalhe);
+              
+              // Atualizar o nome do usuário logado
+              const updatedUserData = {
+                ...biometricUserData,
+                nome: colaboradorDetalhe.nome
+              };
+              setUsuarioLogado(updatedUserData);
+              
+              // Continuar com o fluxo de login
+              await completeLogin(updatedUserData);
+            } else {
+              toast({
+                title: "Colaborador não encontrado",
+                description: "Não foi possível encontrar os dados do colaborador.",
+                variant: "destructive",
+              });
+              setIsLoading(false);
+              return;
+            }
+          } else {
+            // Mais de uma matrícula, abrir modal para seleção
+            setMatriculas(biometricMatriculas);
+            setShowMatriculaModal(true);
+            // Não continuar o fluxo ainda, aguardar seleção do usuário
+            return;
+          }
+        } else {
+          // Caso não tenha a propriedade matriculas ou não seja um array
+          toast({
+            title: "Nenhuma matrícula encontrada",
+            description: "Não foi possível encontrar matrículas para este colaborador.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        // Se não houver documento federal, continuar com o fluxo normal
+        await completeLogin(biometricUserData);
+      }
+    } catch (error) {
+      console.error('Erro no login biométrico:', error);
+      toast({
+        title: "Erro no login biométrico",
+        description: error instanceof Error ? error.message : "Erro desconhecido ao realizar login com biometria",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   const completeLogin = async (userDataParam?: UserData) => {
@@ -167,6 +302,15 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       setUsuarioLogado(userDataResponse);
       setAuthorizationData(loginResponse.access_token);
       setLastLogin(username); // Salvar último login usado
+
+      // Salvar credenciais para biometria (com segurança)
+      try {
+        await BiometricService.saveCredentials(username, password);
+        setIsBiometricEnabled(true);
+      } catch (error) {
+        console.warn('Não foi possível salvar credenciais para biometria:', error);
+        // Não interromper o fluxo de login por causa disso
+      }
 
       // Step 4: Verificar se o campo documentoFederal existe e não é nulo/vazio
       const documento = userDataResponse?.pessoaFisica?.pessoa?.documentoFederal;
@@ -332,10 +476,18 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
           Ou entrar com
         </div>
 
-        <button className="pc-btn-secondary w-full flex items-center justify-center gap-2">
-          <span>👆</span>
-          Biometria
-        </button>
+        {isBiometricAvailable && (
+          <button 
+            onClick={handleBiometricLogin}
+            disabled={isLoading || !isBiometricEnabled}
+            className={`w-full flex items-center justify-center gap-2 pc-btn-secondary ${
+              isLoading || !isBiometricEnabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            <Fingerprint size={20} />
+            Biometria
+          </button>
+        )}
       </div>
 
       <SelectMatriculaModal
