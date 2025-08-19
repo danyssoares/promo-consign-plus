@@ -185,7 +185,7 @@ export const ContractDetail = ({ contract, onBack }: {
   const status = situacao === "Aprovado" ? "active" : "inactive";
 
   // Preparar as parcelas para exibição
-  const parcelas: Parcela[] = contrato.contratosParcelas?.map((parcela: ContratoParcela) => ({
+  const parcelas: Parcela[] = contrato.contratoParcelas?.map((parcela: ContratoParcela) => ({
     numero: parcela.parcela,
     data: formatParcelaDate(parcela.dataMesAnoReferencia),
     valor: parcela.valorParcela,
