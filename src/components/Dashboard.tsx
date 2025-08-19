@@ -90,7 +90,7 @@ export const Dashboard = () => {
               <span className="pc-text-body text-foreground text-xs font-medium">{userLogin}</span>
             </div>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-4" align="end">
+          <PopoverContent className="w-80 p-4 bg-background border border-border shadow-lg" align="end">
             <div className="space-y-4">
               <div className="text-center pb-3 border-b border-border">
                 <h3 className="pc-text-body font-semibold text-primary">
