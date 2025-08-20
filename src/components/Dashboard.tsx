@@ -30,6 +30,7 @@ export const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [sessionTime, setSessionTime] = useState<string>("00:00:00");
   const [selectedData, setSelectedData] = useState<ChartData | null>(null);
+  const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | null>(null);
 
   // Extrair login do objeto Global se existir
   const userLogin = (userData as { Global?: { login?: string } })?.Global?.login || (userData as { login?: string })?.login || (userData as { nome?: string })?.nome || "Usuário";
@@ -309,8 +310,9 @@ export const Dashboard = () => {
                   bottom: 0,
                 }}
                 onClick={(data) => {
-                  if (data && data.activePayload && data.activePayload[0]) {
+                  if (data && data.activePayload && data.activePayload[0] && data.chartX && data.chartY) {
                     setSelectedData(data.activePayload[0].payload);
+                    setPopoverPosition({ x: data.chartX, y: data.chartY });
                   }
                 }}
               >
@@ -345,7 +347,8 @@ export const Dashboard = () => {
                     value === 'valorUtilizado' ? 'Utilizado' :
                     value === 'valorRendimento' ? 'Rendimento' : 'Margem'
                   }
-                  wrapperStyle={{ fontSize: '10px' }}
+                  wrapperStyle={{ fontSize: '10px', textAlign: 'center' }}
+                  iconType="circle"
                 />
                 <Area
                   type="monotone"
@@ -354,6 +357,7 @@ export const Dashboard = () => {
                   stroke="#DC2626"
                   fill="url(#colorUtilizado)"
                   strokeWidth={2}
+                  dot={{ fill: '#DC2626', r: 3 }}
                 />
                 <Area
                   type="monotone"
@@ -362,6 +366,7 @@ export const Dashboard = () => {
                   stroke="#1E4193"
                   fill="url(#colorRendimento)"
                   strokeWidth={2}
+                  dot={{ fill: '#1E4193', r: 3 }}
                 />
                 <Area
                   type="monotone"
@@ -370,6 +375,7 @@ export const Dashboard = () => {
                   stroke="#F7DB14"
                   fill="url(#colorMargem)"
                   strokeWidth={2}
+                  dot={{ fill: '#F7DB14', r: 3 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -378,33 +384,36 @@ export const Dashboard = () => {
       </Card>
 
       {/* Popover dos dados do clique no gráfico */}
-      {selectedData && (
-        <Popover open={!!selectedData} onOpenChange={(open) => !open && setSelectedData(null)}>
-          <PopoverTrigger asChild>
-            <div className="absolute opacity-0 pointer-events-none" />
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-2 bg-background border shadow-md">
-            <div className="text-center">
-              <p className="text-xs font-medium text-foreground mb-2">
-                {selectedData.data}
-              </p>
-              <div className="grid grid-cols-1 gap-1 text-xs">
-                <div className="flex justify-between gap-4">
-                  <span className="text-red-600">Utilizado:</span>
-                  <span className="font-medium">R$ {selectedData.valorUtilizado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span className="text-blue-600">Rendimento:</span>
-                  <span className="font-medium">R$ {selectedData.valorRendimento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span className="text-yellow-600">Margem:</span>
-                  <span className="font-medium">R$ {selectedData.valorMargem.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                </div>
+      {selectedData && popoverPosition && (
+        <div 
+          className="fixed z-50 pointer-events-none"
+          style={{ 
+            left: popoverPosition.x + 10, 
+            top: popoverPosition.y - 50,
+            transform: 'translate(-50%, 0)'
+          }}
+          onClick={() => setSelectedData(null)}
+        >
+          <div className="bg-background border border-border shadow-md rounded-lg p-2 text-center pointer-events-auto">
+            <p className="text-xs font-medium text-foreground mb-2">
+              {selectedData.data}
+            </p>
+            <div className="grid grid-cols-1 gap-1 text-xs">
+              <div className="flex justify-between gap-4">
+                <span className="text-red-600">Utilizado:</span>
+                <span className="font-medium">R$ {selectedData.valorUtilizado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-blue-600">Rendimento:</span>
+                <span className="font-medium">R$ {selectedData.valorRendimento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-yellow-600">Margem:</span>
+                <span className="font-medium">R$ {selectedData.valorMargem.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
-          </PopoverContent>
-        </Popover>
+          </div>
+        </div>
       )}
 
       {/* Total Utilizado no Período */}
