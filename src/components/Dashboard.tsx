@@ -291,7 +291,10 @@ export const Dashboard = () => {
         <CardHeader>
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Evolução Financeira - Últimos 6 Meses
+            <div className="flex flex-col">
+              <span>Evolução Financeira</span>
+              <span className="text-sm font-normal text-muted-foreground">Últimos 6 meses</span>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -339,10 +342,18 @@ export const Dashboard = () => {
                 />
                 <Legend 
                   formatter={(value) => 
-                    value === 'valorRendimento' ? 'Rendimento' :
-                    value === 'valorMargem' ? 'Margem' : 'Utilizado'
+                    value === 'valorUtilizado' ? 'Utilizado' :
+                    value === 'valorRendimento' ? 'Rendimento' : 'Margem'
                   }
-                  wrapperStyle={{ fontSize: '11px' }}
+                  wrapperStyle={{ fontSize: '10px' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="valorUtilizado"
+                  stackId="1"
+                  stroke="#DC2626"
+                  fill="url(#colorUtilizado)"
+                  strokeWidth={2}
                 />
                 <Area
                   type="monotone"
@@ -360,70 +371,50 @@ export const Dashboard = () => {
                   fill="url(#colorMargem)"
                   strokeWidth={2}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="valorUtilizado"
-                  stackId="1"
-                  stroke="#DC2626"
-                  fill="url(#colorUtilizado)"
-                  strokeWidth={2}
-                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
 
-      {/* Dados do clique no gráfico */}
+      {/* Popover dos dados do clique no gráfico */}
       {selectedData && (
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="pt-4">
+        <Popover open={!!selectedData} onOpenChange={(open) => !open && setSelectedData(null)}>
+          <PopoverTrigger asChild>
+            <div className="absolute opacity-0 pointer-events-none" />
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2 bg-background border shadow-md">
             <div className="text-center">
-              <p className="text-sm font-medium text-blue-700 mb-3">
-                Dados de {selectedData.data}
+              <p className="text-xs font-medium text-foreground mb-2">
+                {selectedData.data}
               </p>
-              <div className="grid grid-cols-3 gap-4 text-xs">
-                <div>
-                  <p className="text-blue-600 font-medium">Rendimento</p>
-                  <p className="text-blue-900 font-bold">
-                    R$ {selectedData.valorRendimento.toLocaleString('pt-BR', { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 2 
-                    })}
-                  </p>
+              <div className="grid grid-cols-1 gap-1 text-xs">
+                <div className="flex justify-between gap-4">
+                  <span className="text-red-600">Utilizado:</span>
+                  <span className="font-medium">R$ {selectedData.valorUtilizado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div>
-                  <p className="text-yellow-600 font-medium">Margem</p>
-                  <p className="text-yellow-900 font-bold">
-                    R$ {selectedData.valorMargem.toLocaleString('pt-BR', { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 2 
-                    })}
-                  </p>
+                <div className="flex justify-between gap-4">
+                  <span className="text-blue-600">Rendimento:</span>
+                  <span className="font-medium">R$ {selectedData.valorRendimento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                 </div>
-                <div>
-                  <p className="text-red-600 font-medium">Utilizado</p>
-                  <p className="text-red-900 font-bold">
-                    R$ {selectedData.valorUtilizado.toLocaleString('pt-BR', { 
-                      minimumFractionDigits: 2, 
-                      maximumFractionDigits: 2 
-                    })}
-                  </p>
+                <div className="flex justify-between gap-4">
+                  <span className="text-yellow-600">Margem:</span>
+                  <span className="font-medium">R$ {selectedData.valorMargem.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </PopoverContent>
+        </Popover>
       )}
 
       {/* Total Utilizado no Período */}
       <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
-        <CardContent className="pt-4 pb-4">
+        <CardContent className="pt-3 pb-3">
           <div className="text-center">
-            <p className="text-sm font-medium text-orange-700 mb-1">
+            <p className="text-xs font-medium text-orange-700 mb-1">
               Total Utilizado no Período
             </p>
-            <p className="text-2xl font-bold text-orange-900">
+            <p className="text-lg font-bold text-orange-900">
               R$ {totalUtilizadoPeriodo.toLocaleString('pt-BR', { 
                 minimumFractionDigits: 2, 
                 maximumFractionDigits: 2 
