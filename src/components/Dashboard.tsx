@@ -1,9 +1,18 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { User } from "lucide-react";
+import { User, CreditCard, Banknote, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { convenioService, LimiteUtilizado } from "@/services/convenioService";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+
+interface ChartData {
+  valorRendimento: number;
+  valorUtilizado: number;
+  valorMargem: number;
+  data: string;
+}
 
 export const Dashboard = () => {
   const {
@@ -23,9 +32,49 @@ export const Dashboard = () => {
 
   // Extrair login do objeto Global se existir
   const userLogin = (userData as { Global?: { login?: string } })?.Global?.login || (userData as { login?: string })?.login || (userData as { nome?: string })?.nome || "Usuário";
-  const months = ["Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-  const marginData = [40, 65, 30, 80, 45, 70];
-  const creditData = [60, 45, 70, 55, 85, 40];
+  
+  // Dados mockados baseados no exemplo fornecido
+  const chartData: ChartData[] = [
+    {
+      valorRendimento: 1234.55,
+      valorUtilizado: 0,
+      valorMargem: 2323.00,
+      data: "03/25"
+    },
+    {
+      valorRendimento: 1460.00,
+      valorUtilizado: 0,
+      valorMargem: 3026.00,
+      data: "04/25"
+    },
+    {
+      valorRendimento: 1234.55,
+      valorUtilizado: 0.00,
+      valorMargem: 2849.00,
+      data: "05/25"
+    },
+    {
+      valorRendimento: 1100.00,
+      valorUtilizado: 0.00,
+      valorMargem: 2926.00,
+      data: "06/25"
+    },
+    {
+      valorRendimento: 1234.55,
+      valorUtilizado: 0.00,
+      valorMargem: 3023.00,
+      data: "07/25"
+    },
+    {
+      valorRendimento: 1900.00,
+      valorUtilizado: 0.00,
+      valorMargem: 2849.00,
+      data: "08/25"
+    }
+  ];
+
+  // Calcular total utilizado no período
+  const totalUtilizadoPeriodo = chartData.reduce((total, item) => total + item.valorUtilizado, 0);
 
   // Calcular tempo de sessão
   useEffect(() => {
@@ -156,9 +205,9 @@ export const Dashboard = () => {
                   </div>
                   <div className="space-y-1">
                     <span className="pc-text-caption text-muted-foreground block">Matrícula</span>
-                    <span className="pc-text-body font-medium text-foreground text-sm">
-                      {colaborador?.pessoaFisica?.pessoa?.id || colaborador?.matricula || "Não informado"}
-                    </span>
+                     <span className="pc-text-body font-medium text-foreground text-sm">
+                       {colaborador?.pessoaFisica?.pessoa?.nome || colaborador?.id || "Não informado"}
+                     </span>
                   </div>
                 </div>
                 
@@ -183,78 +232,172 @@ export const Dashboard = () => {
         </Popover>
       </div>
 
-      {/* Margem Consignável Card */}
-      <div className="pc-card">
-        <h3 className="pc-text-body text-muted-foreground mb-2">Margem Consignável</h3>
-        <div className="mb-4">
-          <span className="pc-text-caption text-muted-foreground">Margem Disponível</span>
-          <div className="pc-text-value">
-            {error ? (
-              <span className="text-destructive">Erro ao carregar</span>
-            ) : (
-              `R$ ${valorMargemDisponivelEmprestimo.toLocaleString('pt-BR', { 
-                minimumFractionDigits: 2, 
-                maximumFractionDigits: 2 
-              })}`
-            )}
-          </div>
-          {/*<span className="pc-text-caption text-muted-foreground">Total</span>*/}
-        </div>
-        
-        {/* Chart */}
-        <div className="h-32 flex items-end justify-between gap-2 p-3 bg-muted/10 rounded-lg">
-          {marginData.map((height, index) => <div key={index} className="flex flex-col items-center gap-2 flex-1">
-              <div className="flex flex-col items-center justify-end h-20">
-                <span className="pc-text-caption text-primary font-medium mb-1">
-                  {height}%
-                </span>
-                <div className="bg-gradient-to-t from-primary to-primary/60 w-full rounded-t-sm transition-all duration-300 hover:from-primary/80 hover:to-primary/40" style={{
-              height: `${height}%`,
-              minWidth: '20px'
-            }} />
-              </div>
-              <span className="pc-text-caption text-muted-foreground text-xs font-medium">
-                {months[index]}
-              </span>
-            </div>)}
-        </div>
+      {/* Cards dos valores disponíveis */}
+      <div className="grid grid-cols-1 gap-4">
+        {/* Margem Consignável Card */}
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-blue-700">
+              Margem Consignável
+            </CardTitle>
+            <Banknote className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-900">
+              {error ? (
+                <span className="text-destructive">Erro ao carregar</span>
+              ) : (
+                `R$ ${valorMargemDisponivelEmprestimo.toLocaleString('pt-BR', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                })}`
+              )}
+            </div>
+            <p className="text-xs text-blue-600 mt-1">
+              Valor disponível para empréstimo
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Cartão de Crédito Card */}
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-green-700">
+              Cartão de Crédito
+            </CardTitle>
+            <CreditCard className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-900">
+              {error ? (
+                <span className="text-destructive">Erro ao carregar</span>
+              ) : (
+                `R$ ${valorMargemDisponivelCartao.toLocaleString('pt-BR', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                })}`
+              )}
+            </div>
+            <p className="text-xs text-green-600 mt-1">
+              Limite disponível para cartão
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Cartão de Crédito Card */}
-      <div className="pc-card">
-        <h3 className="pc-text-body text-muted-foreground mb-2">Cartão de Crédito</h3>
-        <div className="mb-4">
-          <span className="pc-text-caption text-muted-foreground">Limite Disponível</span>
-          <div className="pc-text-value">
-            {error ? (
-              <span className="text-destructive">Erro ao carregar</span>
-            ) : (
-              `R$ ${valorMargemDisponivelCartao.toLocaleString('pt-BR', { 
+      {/* Gráfico Stacked Area Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Evolução Financeira - Últimos 6 Meses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={chartData}
+                margin={{
+                  top: 10,
+                  right: 30,
+                  left: 0,
+                  bottom: 0,
+                }}
+              >
+                <defs>
+                  <linearGradient id="colorRendimento" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+                  </linearGradient>
+                  <linearGradient id="colorMargem" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0.2}/>
+                  </linearGradient>
+                  <linearGradient id="colorUtilizado" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  dataKey="data" 
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value) => `R$ ${(value/1000).toFixed(0)}k`}
+                />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    name === 'valorRendimento' ? 'Rendimento' :
+                    name === 'valorMargem' ? 'Margem' : 'Utilizado'
+                  ]}
+                  labelFormatter={(label) => `Mês: ${label}`}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px'
+                  }}
+                />
+                <Legend 
+                  formatter={(value) => 
+                    value === 'valorRendimento' ? 'Rendimento' :
+                    value === 'valorMargem' ? 'Margem' : 'Utilizado'
+                  }
+                />
+                <Area
+                  type="monotone"
+                  dataKey="valorRendimento"
+                  stackId="1"
+                  stroke="hsl(var(--primary))"
+                  fill="url(#colorRendimento)"
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="valorMargem"
+                  stackId="1"
+                  stroke="hsl(var(--accent))"
+                  fill="url(#colorMargem)"
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="valorUtilizado"
+                  stackId="1"
+                  stroke="hsl(var(--destructive))"
+                  fill="url(#colorUtilizado)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Total Utilizado no Período */}
+      <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
+        <CardContent className="pt-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-orange-700 mb-2">
+              Total Utilizado no Período
+            </p>
+            <p className="text-3xl font-bold text-orange-900">
+              R$ {totalUtilizadoPeriodo.toLocaleString('pt-BR', { 
                 minimumFractionDigits: 2, 
                 maximumFractionDigits: 2 
-              })}`
-            )}
+              })}
+            </p>
+            <p className="text-xs text-orange-600 mt-1">
+              Últimos 6 meses
+            </p>
           </div>
-          {/*<span className="pc-text-caption text-muted-foreground">Total</span>*/}
-        </div>
-        
-        {/* Chart */}
-        <div className="h-32 flex items-end justify-between gap-2 p-3 bg-muted/10 rounded-lg">
-          {creditData.map((height, index) => <div key={index} className="flex flex-col items-center gap-2 flex-1">
-              <div className="flex flex-col items-center justify-end h-20">
-                <span className="pc-text-caption text-accent-foreground font-medium mb-1">
-                  {height}%
-                </span>
-                <div className="bg-gradient-to-t from-accent to-accent/60 w-full rounded-t-sm transition-all duration-300 hover:from-accent/80 hover:to-accent/40" style={{
-              height: `${height}%`,
-              minWidth: '20px'
-            }} />
-              </div>
-              <span className="pc-text-caption text-muted-foreground text-xs font-medium">
-                {months[index]}
-              </span>
-            </div>)}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>;
 };
