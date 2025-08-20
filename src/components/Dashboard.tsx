@@ -30,7 +30,6 @@ export const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [sessionTime, setSessionTime] = useState<string>("00:00:00");
   const [selectedData, setSelectedData] = useState<ChartData | null>(null);
-  const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | null>(null);
 
   // Extrair login do objeto Global se existir
   const userLogin = (userData as { Global?: { login?: string } })?.Global?.login || (userData as { login?: string })?.login || (userData as { nome?: string })?.nome || "Usuário";
@@ -311,11 +310,7 @@ export const Dashboard = () => {
                 }}
                 onClick={(event) => {
                   if (event && event.activePayload && event.activePayload[0]) {
-                     setSelectedData(event.activePayload[0].payload);
-                     setPopoverPosition({ 
-                       x: event.chartX || 200, 
-                       y: event.chartY || 100 
-                     });
+                    setSelectedData(event.activePayload[0].payload);
                   }
                 }}
               >
@@ -345,14 +340,15 @@ export const Dashboard = () => {
                   tickLine={false}
                   tickFormatter={(value) => `R$ ${(value/1000).toFixed(0)}k`}
                 />
-                <Legend 
-                  formatter={(value) => 
-                    value === 'valorUtilizado' ? 'Utilizado' :
-                    value === 'valorRendimento' ? 'Rendimento' : 'Margem'
-                  }
-                  wrapperStyle={{ fontSize: '10px', textAlign: 'center', width: '100%', display: 'flex', justifyContent: 'center' }}
-                  iconType="circle"
-                />
+                 <Legend 
+                   formatter={(value) => 
+                     value === 'valorUtilizado' ? 'Utilizado' :
+                     value === 'valorRendimento' ? 'Rendimento' : 'Margem'
+                   }
+                   wrapperStyle={{ fontSize: '10px', textAlign: 'center', width: '100%', display: 'flex', justifyContent: 'center' }}
+                   iconType="circle"
+                   iconSize={8}
+                 />
                 <Area
                   type="monotone"
                   dataKey="valorUtilizado"
@@ -385,39 +381,6 @@ export const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Popover dos dados do clique no gráfico */}
-      {selectedData && popoverPosition && (
-        <div 
-          className="fixed z-50 pointer-events-none"
-          style={{ 
-            left: popoverPosition.x + 10, 
-            top: popoverPosition.y - 50,
-            transform: 'translate(-50%, 0)'
-          }}
-          onClick={() => setSelectedData(null)}
-        >
-          <div className="bg-background border border-border shadow-md rounded-lg p-2 text-center pointer-events-auto">
-            <p className="text-xs font-medium text-foreground mb-2">
-              {selectedData.data}
-            </p>
-            <div className="grid grid-cols-1 gap-1 text-xs">
-              <div className="flex justify-between gap-4">
-                <span className="text-red-600">Utilizado:</span>
-                <span className="font-medium">R$ {selectedData.valorUtilizado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-blue-600">Rendimento:</span>
-                <span className="font-medium">R$ {selectedData.valorRendimento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-yellow-600">Margem:</span>
-                <span className="font-medium">R$ {selectedData.valorMargem.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Total Utilizado no Período */}
       <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
