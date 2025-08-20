@@ -18,7 +18,7 @@ type RubricaGroup = {
 };
 
 // Ícones para diferentes tipos de rubricas (exemplo)
-const rubricaIcons: Record<string, any> = {
+const rubricaIcons: Record<string, React.ComponentType<{ size: number; className?: string }>> = {
   "Empréstimo": Banknote,
   "Cartão": CreditCard,
   "Mensalidade": Building2,
@@ -76,13 +76,13 @@ export const ProductsScreen = ({ onBack }: ProductsScreenProps) => {
               // Buscar dados do colaborador usando o mesmo método do login
               const colaboradorAtualizado = await colaboradorService.buscarColaboradorPorMatricula(
                 documentoLimpo,
-                (colaborador as any)?.matricula,
+                colaborador.codigoMatricula,
                 authData
               );
               
               if (colaboradorAtualizado) {
                 // Atualizar o colaborador na global
-                setColaborador(colaboradorAtualizado as any);
+                setColaborador(colaboradorAtualizado);
 
                 // Atualizar os valores de margem
                 const margemCartaoValue = colaboradorAtualizado.folhaColaborador?.valorMargemCartao || 0;
