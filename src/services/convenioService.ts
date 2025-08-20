@@ -11,6 +11,7 @@ export interface LimiteUtilizado {
 
 // Interfaces para os dados do contrato
 export interface Pessoa {
+  documentoFederal: any;
   nome: string;
 }
 
@@ -18,8 +19,16 @@ export interface PessoaFisica {
   pessoa: Pessoa;
 }
 
+export interface FolhaColaborador {
+  valorMargemCartao: number;
+  valorMargemEmprestimo: number;
+}
+
 export interface Colaborador {
   pessoaFisica: PessoaFisica;
+  idParceiro?: number; // Adicionando o campo idParceiro
+  id: string; // Adicionando o campo id
+  folhaColaborador?: FolhaColaborador; // Adicionando o campo folhaColaborador
 }
 
 export interface ContratoParcelaSituacaoDTO {
@@ -72,6 +81,15 @@ export interface ConvenioResponse {
   contratos: Contrato[];
   valorParcelaAutorizado: number;
   qtdParcelasAutorizado: number;
+}
+
+// Interface para os dados da nova API
+export interface RubricaConvenio {
+  descricaoRubricaTipo: string;
+  nomeFantasiaConsignataria: string;
+  nomeConvenio: string;
+  nome: string;
+  // Adicione outros campos conforme necessário
 }
 
 export class ConvenioService {
@@ -151,6 +169,49 @@ export class ConvenioService {
       return data as ConvenioResponse;
     } catch (error) {
       throw new Error(`Failed to fetch contrato details: ${error}`);
+    }
+  }
+
+  // Novo método para buscar rubricas de convênio
+  async listarRubricaConvenioParceiro(
+    idParceiro: number, 
+    idUsuarioLogado: string, 
+    idColaborador: string, 
+    authorization: string
+  ): Promise<RubricaConvenio[]> {
+    // Get client IP for headers
+    const clientIp = await this.getClientIp();
+    
+    const headers = {
+      'Authorization': `Bearer ${authorization}`,
+      'Content-Type': 'application/json',
+      'X-Forwarded-For-Private': clientIp,
+      'X-Forwarded-For': clientIp
+    };
+
+    try {
+      const response = await fetch(
+        `${environment.consigApiUrl}/convenio/listarRubricaConvenioParceiro/${idParceiro}/${idUsuarioLogado}/${idColaborador}`, 
+        {
+          method: 'GET',
+          headers
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: unknown = await response.json();
+      
+      // Verificar se é um array
+      if (!Array.isArray(data)) {
+        throw new Error("Resposta inválida da API: esperava um array");
+      }
+      
+      return data as RubricaConvenio[];
+    } catch (error) {
+      throw new Error(`Failed to fetch rubricas: ${error}`);
     }
   }
 }

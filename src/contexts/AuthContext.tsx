@@ -1,15 +1,16 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { UserData } from '@/services/loginService';
+import { Colaborador } from '@/services/convenioService';
 
 interface AuthContextType {
   usuarioLogado: UserData | null;
   authorizationData: string | null;
-  colaborador: any;
+  colaborador: Colaborador | null;
   listaMatriculasColaborador: any[];
   lastLogin: string | null;
   setUsuarioLogado: (usuario: UserData | null) => void;
   setAuthorizationData: (auth: string | null) => void;
-  setColaborador: (colaborador: any) => void;
+  setColaborador: (colaborador: Colaborador | null) => void;
   setListaMatriculasColaborador: (lista: any[]) => void;
   setLastLogin: (login: string | null) => void;
   getAuthorizationData: () => string | null;
@@ -35,7 +36,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [usuarioLogado, setUsuarioLogadoState] = useState<UserData | null>(null);
   const [authorizationData, setAuthorizationDataState] = useState<string | null>(null);
-  const [colaborador, setColaboradorState] = useState<any>(null);
+  const [colaborador, setColaboradorState] = useState<Colaborador | null>(null);
   const [listaMatriculasColaborador, setListaMatriculasColaboradorState] = useState<any[]>([]);
   const [lastLogin, setLastLoginState] = useState<string | null>(null);
 
@@ -59,7 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const setColaborador = (colabData: any) => {
+  const setColaborador = (colabData: Colaborador | null) => {
     setColaboradorState(colabData);
   };
 

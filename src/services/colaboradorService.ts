@@ -17,11 +17,17 @@ export interface MatriculaData {
   [key: string]: unknown;
 }
 
+export interface FolhaColaborador {
+  valorMargemCartao: number;
+  valorMargemEmprestimo: number;
+}
+
 export interface ColaboradorDetalheData {
   id: string;
   nome: string;
   matricula: string;
   cpf: string;
+  folhaColaborador?: FolhaColaborador;
   // Adicione outras propriedades conforme necessário
   [key: string]: unknown;
 }

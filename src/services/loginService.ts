@@ -1,5 +1,6 @@
 import { environment } from '@/lib/environment';
 import { IpDetection } from '@/lib/ipDetection';
+import { Colaborador } from './convenioService';
 
 export interface LoginResponse {
   access_token: string;
@@ -19,6 +20,7 @@ export interface UserData {
     login: string;
     [key: string]: any;
   };
+  colaborador?: Colaborador;
   // Add other user properties as needed
 }
 
