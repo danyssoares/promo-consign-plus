@@ -309,10 +309,17 @@ export const Dashboard = () => {
                   left: 0,
                   bottom: 0,
                 }}
-                onClick={(data) => {
-                  if (data && data.activePayload && data.activePayload[0] && data.chartX && data.chartY) {
-                    setSelectedData(data.activePayload[0].payload);
-                    setPopoverPosition({ x: data.chartX, y: data.chartY });
+                onClick={(event) => {
+                  if (event && event.activePayload && event.activePayload[0]) {
+                    const rect = event.chartX ? event.currentTarget.getBoundingClientRect() : null;
+                    const mouseX = event.chartX || 0;
+                    const mouseY = event.chartY || 0;
+                    
+                    setSelectedData(event.activePayload[0].payload);
+                    setPopoverPosition({ 
+                      x: rect ? rect.left + mouseX : mouseX, 
+                      y: rect ? rect.top + mouseY : mouseY 
+                    });
                   }
                 }}
               >
@@ -347,7 +354,7 @@ export const Dashboard = () => {
                     value === 'valorUtilizado' ? 'Utilizado' :
                     value === 'valorRendimento' ? 'Rendimento' : 'Margem'
                   }
-                  wrapperStyle={{ fontSize: '10px', textAlign: 'center' }}
+                  wrapperStyle={{ fontSize: '10px', textAlign: 'center', width: '100%', display: 'flex', justifyContent: 'center' }}
                   iconType="circle"
                 />
                 <Area
@@ -357,7 +364,7 @@ export const Dashboard = () => {
                   stroke="#DC2626"
                   fill="url(#colorUtilizado)"
                   strokeWidth={2}
-                  dot={{ fill: '#DC2626', r: 3 }}
+                  dot={{ fill: '#DC2626', r: 2 }}
                 />
                 <Area
                   type="monotone"
@@ -366,7 +373,7 @@ export const Dashboard = () => {
                   stroke="#1E4193"
                   fill="url(#colorRendimento)"
                   strokeWidth={2}
-                  dot={{ fill: '#1E4193', r: 3 }}
+                  dot={{ fill: '#1E4193', r: 2 }}
                 />
                 <Area
                   type="monotone"
@@ -375,7 +382,7 @@ export const Dashboard = () => {
                   stroke="#F7DB14"
                   fill="url(#colorMargem)"
                   strokeWidth={2}
-                  dot={{ fill: '#F7DB14', r: 3 }}
+                  dot={{ fill: '#F7DB14', r: 2 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
