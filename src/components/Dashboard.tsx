@@ -298,11 +298,11 @@ export const Dashboard = () => {
 
               {/* Chart Container */}
               <div className="relative">
-                <div className="h-64 bg-gradient-to-b from-muted/5 to-muted/20 rounded-lg p-4 overflow-hidden">
+                <div className="h-64 bg-gradient-to-b from-muted/5 to-muted/20 rounded-lg p-2 overflow-hidden">
                   <svg 
                     width="100%" 
                     height="100%" 
-                    viewBox="0 0 300 200" 
+                    viewBox="0 0 400 220" 
                     className="overflow-visible"
                   >
                     <defs>
@@ -316,9 +316,9 @@ export const Dashboard = () => {
                     {[0, 1, 2, 3, 4].map((line) => (
                       <line
                         key={line}
-                        x1="40"
+                        x1="30"
                         y1={30 + (line * 35)}
-                        x2="280"
+                        x2="370"
                         y2={30 + (line * 35)}
                         stroke="#E5E7EB"
                         strokeWidth="0.5"
@@ -333,9 +333,8 @@ export const Dashboard = () => {
                         ...historicoMargens.map(h => h.valorUtilizado || 0)
                       );
                       
-                      const barWidth = 25;
-                      const spacing = 40;
-                      const chartWidth = 240;
+                      const barWidth = 35;
+                      const chartWidth = 340;
                       const chartHeight = 140;
                       const startX = 50;
                       
@@ -360,14 +359,14 @@ export const Dashboard = () => {
                                   width={barWidth}
                                   height={barHeight}
                                   fill="url(#barGradient)"
-                                  rx="2"
+                                  rx="3"
                                 />
                                 {/* Bar value label */}
                                 <text
                                   x={positions[index]}
                                   y={y - 5}
                                   textAnchor="middle"
-                                  fontSize="10"
+                                  fontSize="11"
                                   fill="#374151"
                                   fontWeight="600"
                                 >
@@ -390,30 +389,29 @@ export const Dashboard = () => {
                             strokeLinejoin="round"
                           />
                           
-                          {/* Rendimento points */}
+                          {/* Rendimento points and values */}
                           {historicoMargens.map((item, index) => {
                             const y = 170 - ((item.valorRendimento / maxValue) * chartHeight * 0.8);
-                            const percentage = ((item.valorRendimento / item.valorMargem) * 100).toFixed(1);
                             
                             return (
                               <g key={`rendimento-${index}`}>
                                 <circle
                                   cx={positions[index]}
                                   cy={y}
-                                  r="3"
+                                  r="4"
                                   fill="#3B82F6"
                                   stroke="#FFFFFF"
                                   strokeWidth="2"
                                 />
                                 <text
                                   x={positions[index]}
-                                  y={y - 10}
+                                  y={y - 12}
                                   textAnchor="middle"
-                                  fontSize="9"
+                                  fontSize="10"
                                   fill="#3B82F6"
                                   fontWeight="600"
                                 >
-                                  {percentage}%
+                                  {(item.valorRendimento / 1000).toFixed(1)}k
                                 </text>
                               </g>
                             );
@@ -442,7 +440,6 @@ export const Dashboard = () => {
                                 if (utilizadoValue === 0) return null;
                                 
                                 const y = 170 - ((utilizadoValue / maxValue) * chartHeight * 0.8);
-                                const percentage = ((utilizadoValue / item.valorMargem) * 100).toFixed(1);
                                 
                                 return (
                                   <g key={`utilizado-${index}`}>
@@ -462,7 +459,7 @@ export const Dashboard = () => {
                                       fill="#EF4444"
                                       fontWeight="600"
                                     >
-                                      {percentage}%
+                                      {(utilizadoValue / 1000).toFixed(1)}k
                                     </text>
                                   </g>
                                 );
@@ -470,18 +467,18 @@ export const Dashboard = () => {
                             </>
                           )}
                           
-                          {/* X-axis labels */}
+                          {/* X-axis labels with year */}
                           {historicoMargens.map((item, index) => (
                             <text
                               key={`label-${index}`}
                               x={positions[index]}
-                              y={190}
+                              y={195}
                               textAnchor="middle"
-                              fontSize="10"
+                              fontSize="11"
                               fill="#6B7280"
                               fontWeight="500"
                             >
-                              {getMonthName(item.data)}
+                              {getMonthName(item.data)}/{item.data.split('/')[1]}
                             </text>
                           ))}
                         </>
@@ -491,23 +488,11 @@ export const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Summary Cards */}
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
-                  <div className="text-xs text-yellow-700 mb-1">Margem Média</div>
-                  <div className="text-sm font-bold text-yellow-800">
-                    {formatCurrency(historicoMargens.reduce((acc, item) => acc + item.valorMargem, 0) / historicoMargens.length)}
-                  </div>
-                </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                  <div className="text-xs text-blue-700 mb-1">Rendimento Médio</div>
-                  <div className="text-sm font-bold text-blue-800">
-                    {formatCurrency(historicoMargens.reduce((acc, item) => acc + item.valorRendimento, 0) / historicoMargens.length)}
-                  </div>
-                </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
-                  <div className="text-xs text-red-700 mb-1">Total Utilizado</div>
-                  <div className="text-sm font-bold text-red-800">
+              {/* Total Utilizado */}
+              <div className="mt-4 flex justify-center">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center min-w-[200px]">
+                  <div className="text-sm text-red-700 mb-2">Total Utilizado no Período</div>
+                  <div className="text-lg font-bold text-red-800">
                     {formatCurrency(historicoMargens.reduce((acc, item) => acc + (item.valorUtilizado || 0), 0))}
                   </div>
                 </div>
