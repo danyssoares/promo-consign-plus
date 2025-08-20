@@ -76,7 +76,11 @@ export const ProductsScreen = ({ onBack }: ProductsScreenProps) => {
               // Buscar dados do colaborador usando o mesmo método do login
               const colaboradorAtualizado = await colaboradorService.buscarColaboradorPorMatricula(
                 documentoLimpo,
+<<<<<<< Updated upstream
                 colaborador.id,
+=======
+                (colaborador as any)?.codigoMatricula,
+>>>>>>> Stashed changes
                 authData
               );
               
