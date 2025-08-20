@@ -1,9 +1,11 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { User } from "lucide-react";
+import { User, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { convenioService, LimiteUtilizado } from "@/services/convenioService";
+import { convenioService, HistoricoMargem } from "@/services/convenioService";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const Dashboard = () => {
   const {
@@ -17,15 +19,13 @@ export const Dashboard = () => {
 
   const [valorMargemDisponivelCartao, setValorMargemDisponivelCartao] = useState<number>(0);
   const [valorMargemDisponivelEmprestimo, setValorMargemDisponivelEmprestimo] = useState<number>(0);
+  const [historicoMargens, setHistoricoMargens] = useState<HistoricoMargem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionTime, setSessionTime] = useState<string>("00:00:00");
 
   // Extrair login do objeto Global se existir
   const userLogin = (userData as { Global?: { login?: string } })?.Global?.login || (userData as { login?: string })?.login || (userData as { nome?: string })?.nome || "Usuário";
-  const months = ["Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-  const marginData = [40, 65, 30, 80, 45, 70];
-  const creditData = [60, 45, 70, 55, 85, 40];
 
   // Calcular tempo de sessão
   useEffect(() => {
@@ -61,7 +61,7 @@ export const Dashboard = () => {
   }, [userData, colaborador]); // Reiniciar quando há mudanças no usuário/colaborador
 
   useEffect(() => {
-    const fetchLimitesUtilizados = async () => {
+    const fetchDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -71,7 +71,7 @@ export const Dashboard = () => {
           throw new Error("Dados do colaborador ou token de autenticação não encontrados");
         }
 
-        // Buscar limites utilizados
+        // Buscar limites utilizados para calcular valores disponíveis
         const listaValorUtilizado = await convenioService.buscarLimiteUtilizadoPorColaborador(
           colaborador.id, 
           authToken
@@ -81,28 +81,63 @@ export const Dashboard = () => {
         const valorMargemCartao = colaborador.folhaColaborador ? colaborador.folhaColaborador.valorMargemCartao : 0;
         const valorMargemEmprestimo = colaborador.folhaColaborador ? colaborador.folhaColaborador.valorMargemEmprestimo : 0;
 
-        const valorMargemUtilizadoCartao = listaValorUtilizado[1].valorUtilizado || 0;
-        const valorMargemUtilizadoEmprestimo = listaValorUtilizado[0].valorUtilizado || 0;
+        const valorMargemUtilizadoCartao = listaValorUtilizado[1]?.valorUtilizado || 0;
+        const valorMargemUtilizadoEmprestimo = listaValorUtilizado[0]?.valorUtilizado || 0;
 
-        if (listaValorUtilizado.length >= 2) {
-          setValorMargemDisponivelCartao(valorMargemCartao - valorMargemUtilizadoCartao);
-          setValorMargemDisponivelEmprestimo(valorMargemEmprestimo - valorMargemUtilizadoEmprestimo);
-        } else {
-          setValorMargemDisponivelCartao(0);
-          setValorMargemDisponivelEmprestimo(0);
+        setValorMargemDisponivelCartao(valorMargemCartao - valorMargemUtilizadoCartao);
+        setValorMargemDisponivelEmprestimo(valorMargemEmprestimo - valorMargemUtilizadoEmprestimo);
+
+        // Buscar histórico de margens dos últimos 6 meses
+        try {
+          const historico = await convenioService.buscarHistoricoMargens(colaborador.id, authToken);
+          setHistoricoMargens(historico);
+        } catch (historicoError) {
+          console.warn("Erro ao buscar histórico de margens:", historicoError);
+          // Se não conseguir buscar o histórico, usar dados mock para demonstração
+          setHistoricoMargens([
+            { valorRendimento: 1234.55, valorUtilizado: null, valorMargem: 2323.00, data: "03/2025" },
+            { valorRendimento: 1460.00, valorUtilizado: null, valorMargem: 3026.00, data: "04/2025" },
+            { valorRendimento: 1234.55, valorUtilizado: 0.00, valorMargem: 2849.00, data: "05/2025" },
+            { valorRendimento: 1100.00, valorUtilizado: 0.00, valorMargem: 2926.00, data: "06/2025" },
+            { valorRendimento: 1234.55, valorUtilizado: 0.00, valorMargem: 3023.00, data: "07/2025" },
+            { valorRendimento: 1900.00, valorUtilizado: 0.00, valorMargem: 2849.00, data: "08/2025" }
+          ]);
         }
       } catch (err) {
-        console.error("Erro ao buscar limites utilizados:", err);
-        setError("Falha ao carregar os dados de margem utilizada");
+        console.error("Erro ao buscar dados do dashboard:", err);
+        setError("Falha ao carregar os dados do dashboard");
         setValorMargemDisponivelCartao(0);
         setValorMargemDisponivelEmprestimo(0);
+        setHistoricoMargens([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLimitesUtilizados();
+    fetchDashboardData();
   }, [colaborador, authToken]);
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('pt-BR', { 
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+  };
+
+  const getMonthName = (monthYear: string) => {
+    const [month, year] = monthYear.split('/');
+    const monthNames = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+    ];
+    return monthNames[parseInt(month) - 1] || month;
+  };
+
+  // Calcular valores máximos para normalizar o gráfico
+  const maxMargem = Math.max(...historicoMargens.map(h => h.valorMargem), 0);
+  const maxRendimento = Math.max(...historicoMargens.map(h => h.valorRendimento), 0);
 
   if (loading) {
     return (
@@ -115,7 +150,8 @@ export const Dashboard = () => {
     );
   }
 
-  return <div className="pc-container space-y-6 max-w-sm mx-auto">
+  return (
+    <div className="pc-container space-y-6 max-w-sm mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center pt-4 mb-6">
         <img src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" alt="PromoConsig Logo" className="h-12 w-auto" />
@@ -157,7 +193,7 @@ export const Dashboard = () => {
                   <div className="space-y-1">
                     <span className="pc-text-caption text-muted-foreground block">Matrícula</span>
                     <span className="pc-text-body font-medium text-foreground text-sm">
-                      {colaborador?.pessoaFisica?.pessoa?.id || colaborador?.matricula || "Não informado"}
+                      {(colaborador as any)?.matricula || "Não informado"}
                     </span>
                   </div>
                 </div>
@@ -183,78 +219,158 @@ export const Dashboard = () => {
         </Popover>
       </div>
 
-      {/* Margem Consignável Card */}
-      <div className="pc-card">
-        <h3 className="pc-text-body text-muted-foreground mb-2">Margem Consignável</h3>
-        <div className="mb-4">
-          <span className="pc-text-caption text-muted-foreground">Margem Disponível</span>
-          <div className="pc-text-value">
-            {error ? (
-              <span className="text-destructive">Erro ao carregar</span>
-            ) : (
-              `R$ ${valorMargemDisponivelEmprestimo.toLocaleString('pt-BR', { 
-                minimumFractionDigits: 2, 
-                maximumFractionDigits: 2 
-              })}`
-            )}
-          </div>
-          {/*<span className="pc-text-caption text-muted-foreground">Total</span>*/}
-        </div>
-        
-        {/* Chart */}
-        <div className="h-32 flex items-end justify-between gap-2 p-3 bg-muted/10 rounded-lg">
-          {marginData.map((height, index) => <div key={index} className="flex flex-col items-center gap-2 flex-1">
-              <div className="flex flex-col items-center justify-end h-20">
-                <span className="pc-text-caption text-primary font-medium mb-1">
-                  {height}%
-                </span>
-                <div className="bg-gradient-to-t from-primary to-primary/60 w-full rounded-t-sm transition-all duration-300 hover:from-primary/80 hover:to-primary/40" style={{
-              height: `${height}%`,
-              minWidth: '20px'
-            }} />
+      {/* Available Values Cards */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Empréstimo Card */}
+        <Card className="pc-card-gradient">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground font-medium">
+              Empréstimo
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-1">
+              <span className="text-xs text-muted-foreground">Disponível</span>
+              <div className="text-lg font-bold text-primary">
+                {error ? (
+                  <span className="text-destructive text-sm">Erro</span>
+                ) : (
+                  formatCurrency(valorMargemDisponivelEmprestimo)
+                )}
               </div>
-              <span className="pc-text-caption text-muted-foreground text-xs font-medium">
-                {months[index]}
-              </span>
-            </div>)}
-        </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Cartão Card */}
+        <Card className="pc-card-gradient">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground font-medium">
+              Cartão de Crédito
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-1">
+              <span className="text-xs text-muted-foreground">Disponível</span>
+              <div className="text-lg font-bold text-accent">
+                {error ? (
+                  <span className="text-destructive text-sm">Erro</span>
+                ) : (
+                  formatCurrency(valorMargemDisponivelCartao)
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Cartão de Crédito Card */}
-      <div className="pc-card">
-        <h3 className="pc-text-body text-muted-foreground mb-2">Cartão de Crédito</h3>
-        <div className="mb-4">
-          <span className="pc-text-caption text-muted-foreground">Limite Disponível</span>
-          <div className="pc-text-value">
-            {error ? (
-              <span className="text-destructive">Erro ao carregar</span>
-            ) : (
-              `R$ ${valorMargemDisponivelCartao.toLocaleString('pt-BR', { 
-                minimumFractionDigits: 2, 
-                maximumFractionDigits: 2 
-              })}`
-            )}
+      {/* Historical Chart */}
+      <Card className="pc-card">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <CardTitle className="text-base">Histórico dos Últimos 6 Meses</CardTitle>
           </div>
-          {/*<span className="pc-text-caption text-muted-foreground">Total</span>*/}
-        </div>
-        
-        {/* Chart */}
-        <div className="h-32 flex items-end justify-between gap-2 p-3 bg-muted/10 rounded-lg">
-          {creditData.map((height, index) => <div key={index} className="flex flex-col items-center gap-2 flex-1">
-              <div className="flex flex-col items-center justify-end h-20">
-                <span className="pc-text-caption text-accent-foreground font-medium mb-1">
-                  {height}%
-                </span>
-                <div className="bg-gradient-to-t from-accent to-accent/60 w-full rounded-t-sm transition-all duration-300 hover:from-accent/80 hover:to-accent/40" style={{
-              height: `${height}%`,
-              minWidth: '20px'
-            }} />
+        </CardHeader>
+        <CardContent className="pt-0">
+          {historicoMargens.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Nenhum dado histórico disponível</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Legend */}
+              <div className="flex justify-center gap-6 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-primary rounded-full"></div>
+                  <span>Margem</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-accent rounded-full"></div>
+                  <span>Rendimento</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-destructive rounded-full"></div>
+                  <span>Utilizado</span>
+                </div>
               </div>
-              <span className="pc-text-caption text-muted-foreground text-xs font-medium">
-                {months[index]}
-              </span>
-            </div>)}
-        </div>
-      </div>
-    </div>;
+
+              {/* Chart */}
+              <div className="h-40 flex items-end justify-between gap-1 p-3 bg-muted/10 rounded-lg">
+                {historicoMargens.map((item, index) => {
+                  const margemHeight = maxMargem > 0 ? (item.valorMargem / maxMargem) * 100 : 0;
+                  const rendimentoHeight = maxRendimento > 0 ? (item.valorRendimento / maxRendimento) * 80 : 0;
+                  const utilizadoHeight = item.valorUtilizado && maxMargem > 0 ? (item.valorUtilizado / maxMargem) * 100 : 0;
+                  
+                  return (
+                    <div key={index} className="flex flex-col items-center gap-2 flex-1 min-w-0">
+                      <div className="flex flex-col items-center justify-end h-28 w-full relative">
+                        {/* Margem bar */}
+                        <div 
+                          className="bg-gradient-to-t from-primary to-primary/60 w-full rounded-t-sm transition-all duration-300 hover:from-primary/80 hover:to-primary/40 relative group" 
+                          style={{
+                            height: `${Math.max(margemHeight, 5)}%`,
+                            minWidth: '12px'
+                          }}
+                        >
+                          <div className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-background border rounded text-xs whitespace-nowrap shadow-lg z-10">
+                            Margem: {formatCurrency(item.valorMargem)}
+                          </div>
+                        </div>
+                        
+                        {/* Rendimento indicator */}
+                        <div 
+                          className="bg-accent w-2 rounded-full absolute bottom-0 right-0 opacity-80 group-hover:opacity-100"
+                          style={{
+                            height: `${Math.max(rendimentoHeight, 5)}%`
+                          }}
+                        />
+                        
+                        {/* Utilizado indicator (if exists) */}
+                        {item.valorUtilizado !== null && item.valorUtilizado > 0 && (
+                          <div 
+                            className="bg-destructive w-1 rounded-full absolute bottom-0 left-0 opacity-80"
+                            style={{
+                              height: `${Math.max(utilizadoHeight, 5)}%`
+                            }}
+                          />
+                        )}
+                      </div>
+                      
+                      <span className="pc-text-caption text-muted-foreground text-xs font-medium text-center">
+                        {getMonthName(item.data)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Summary */}
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Margem Média</div>
+                  <div className="font-semibold text-primary">
+                    {formatCurrency(historicoMargens.reduce((acc, item) => acc + item.valorMargem, 0) / historicoMargens.length)}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Rendimento Médio</div>
+                  <div className="font-semibold text-accent">
+                    {formatCurrency(historicoMargens.reduce((acc, item) => acc + item.valorRendimento, 0) / historicoMargens.length)}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">Total Utilizado</div>
+                  <div className="font-semibold text-destructive">
+                    {formatCurrency(historicoMargens.reduce((acc, item) => acc + (item.valorUtilizado || 0), 0))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 };

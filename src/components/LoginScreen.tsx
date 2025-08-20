@@ -74,7 +74,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       
       if (colaboradorDetalhe) {
         // Salvar dados do colaborador no contexto
-        setColaborador(colaboradorDetalhe);
+         setColaborador(colaboradorDetalhe as any);
         
         // Atualizar o nome do usuário logado
         /*const updatedUserData = {
@@ -171,7 +171,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
             
             if (colaboradorDetalhe) {
               // Salvar dados do colaborador no contexto
-              setColaborador(colaboradorDetalhe);
+               setColaborador(colaboradorDetalhe as any);
               
               // Atualizar o nome do usuário logado
               const updatedUserData = {
@@ -346,7 +346,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
               
               if (colaboradorDetalhe) {
                 // Salvar dados do colaborador no contexto
-                setColaborador(colaboradorDetalhe);
+                setColaborador(colaboradorDetalhe as any);
                 
                 // Atualizar o nome do usuário logado
                 const updatedUserData = {

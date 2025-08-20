@@ -92,6 +92,13 @@ export interface RubricaConvenio {
   // Adicione outros campos conforme necessário
 }
 
+export interface HistoricoMargem {
+  valorRendimento: number;
+  valorUtilizado: number | null;
+  valorMargem: number;
+  data: string; // formato MM/YYYY
+}
+
 export class ConvenioService {
   private ipExterno = '';
 
@@ -212,6 +219,43 @@ export class ConvenioService {
       return data as RubricaConvenio[];
     } catch (error) {
       throw new Error(`Failed to fetch rubricas: ${error}`);
+    }
+  }
+  // Novo método para buscar histórico de margens dos últimos 6 meses
+  async buscarHistoricoMargens(colaboradorId: string, authorization: string): Promise<HistoricoMargem[]> {
+    // Get client IP for headers
+    const clientIp = await this.getClientIp();
+    
+    const headers = {
+      'Authorization': `Bearer ${authorization}`,
+      'Content-Type': 'application/json',
+      'X-Forwarded-For-Private': clientIp,
+      'X-Forwarded-For': clientIp
+    };
+
+    try {
+      const response = await fetch(
+        `${environment.consigApiUrl}/convenio/buscarHistoricoMargens/${colaboradorId}`, 
+        {
+          method: 'GET',
+          headers
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: unknown = await response.json();
+      
+      // Verificar se é um array
+      if (!Array.isArray(data)) {
+        throw new Error("Resposta inválida da API: esperava um array");
+      }
+      
+      return data as HistoricoMargem[];
+    } catch (error) {
+      throw new Error(`Failed to fetch histórico margens: ${error}`);
     }
   }
 }
