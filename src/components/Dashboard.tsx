@@ -264,7 +264,7 @@ export const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Historical Data - Monthly Cards */}
+      {/* Combined Chart */}
       <Card className="pc-card">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
@@ -279,97 +279,236 @@ export const Dashboard = () => {
               <p className="text-sm">Nenhum dado histórico disponível</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {/* Monthly Data Cards */}
-              {historicoMargens.map((item, index) => (
-                <div key={index} className="bg-muted/20 rounded-lg p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="text-xs font-medium">
-                      {getMonthName(item.data)}
-                    </Badge>
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Margem Total</div>
-                      <div className="text-sm font-bold text-primary">
-                        {formatCurrency(item.valorMargem)}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-accent rounded-full"></div>
-                        <span className="text-muted-foreground">Rendimento</span>
-                      </div>
-                      <div className="font-semibold text-accent pl-3">
-                        {formatCurrency(item.valorRendimento)}
-                      </div>
-                    </div>
+            <div className="space-y-4">
+              {/* Legend */}
+              <div className="flex justify-center gap-4 text-xs flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-3 bg-gradient-to-t from-yellow-400 to-yellow-300 rounded-sm"></div>
+                  <span>Margem Total</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span>Rendimento</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span>Utilizado</span>
+                </div>
+              </div>
+
+              {/* Chart Container */}
+              <div className="relative">
+                <div className="h-64 bg-gradient-to-b from-muted/5 to-muted/20 rounded-lg p-4 overflow-hidden">
+                  <svg 
+                    width="100%" 
+                    height="100%" 
+                    viewBox="0 0 300 200" 
+                    className="overflow-visible"
+                  >
+                    <defs>
+                      <linearGradient id="barGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#FDE047" />
+                        <stop offset="100%" stopColor="#FACC15" />
+                      </linearGradient>
+                    </defs>
                     
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-destructive rounded-full"></div>
-                        <span className="text-muted-foreground">Utilizado</span>
-                      </div>
-                      <div className="font-semibold text-destructive pl-3">
-                        {item.valorUtilizado !== null ? formatCurrency(item.valorUtilizado) : "R$ 0,00"}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Visual Progress Bar */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>0</span>
-                      <span>{formatCurrency(item.valorMargem)}</span>
-                    </div>
-                    <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
-                      <div className="flex h-full">
-                        {/* Rendimento portion */}
-                        <div 
-                          className="bg-accent rounded-l-full"
-                          style={{
-                            width: `${Math.min((item.valorRendimento / item.valorMargem) * 100, 100)}%`
-                          }}
-                        />
-                        {/* Utilizado portion */}
-                        {item.valorUtilizado && item.valorUtilizado > 0 && (
-                          <div 
-                            className="bg-destructive"
-                            style={{
-                              width: `${Math.min((item.valorUtilizado / item.valorMargem) * 100, 100)}%`
-                            }}
+                    {/* Grid lines */}
+                    {[0, 1, 2, 3, 4].map((line) => (
+                      <line
+                        key={line}
+                        x1="40"
+                        y1={30 + (line * 35)}
+                        x2="280"
+                        y2={30 + (line * 35)}
+                        stroke="#E5E7EB"
+                        strokeWidth="0.5"
+                        strokeDasharray="2,2"
+                      />
+                    ))}
+                    
+                    {(() => {
+                      const maxMargem = Math.max(...historicoMargens.map(h => h.valorMargem));
+                      const maxValue = Math.max(
+                        ...historicoMargens.map(h => h.valorRendimento),
+                        ...historicoMargens.map(h => h.valorUtilizado || 0)
+                      );
+                      
+                      const barWidth = 25;
+                      const spacing = 40;
+                      const chartWidth = 240;
+                      const chartHeight = 140;
+                      const startX = 50;
+                      
+                      // Calculate positions for each data point
+                      const positions = historicoMargens.map((_, index) => 
+                        startX + (index * (chartWidth / (historicoMargens.length - 1)))
+                      );
+                      
+                      return (
+                        <>
+                          {/* Bars */}
+                          {historicoMargens.map((item, index) => {
+                            const barHeight = (item.valorMargem / maxMargem) * chartHeight;
+                            const x = positions[index] - barWidth / 2;
+                            const y = 170 - barHeight;
+                            
+                            return (
+                              <g key={`bar-${index}`}>
+                                <rect
+                                  x={x}
+                                  y={y}
+                                  width={barWidth}
+                                  height={barHeight}
+                                  fill="url(#barGradient)"
+                                  rx="2"
+                                />
+                                {/* Bar value label */}
+                                <text
+                                  x={positions[index]}
+                                  y={y - 5}
+                                  textAnchor="middle"
+                                  fontSize="10"
+                                  fill="#374151"
+                                  fontWeight="600"
+                                >
+                                  {(item.valorMargem / 1000).toFixed(1)}k
+                                </text>
+                              </g>
+                            );
+                          })}
+                          
+                          {/* Rendimento line */}
+                          <polyline
+                            points={historicoMargens.map((item, index) => {
+                              const y = 170 - ((item.valorRendimento / maxValue) * chartHeight * 0.8);
+                              return `${positions[index]},${y}`;
+                            }).join(' ')}
+                            fill="none"
+                            stroke="#3B82F6"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                          
+                          {/* Rendimento points */}
+                          {historicoMargens.map((item, index) => {
+                            const y = 170 - ((item.valorRendimento / maxValue) * chartHeight * 0.8);
+                            const percentage = ((item.valorRendimento / item.valorMargem) * 100).toFixed(1);
+                            
+                            return (
+                              <g key={`rendimento-${index}`}>
+                                <circle
+                                  cx={positions[index]}
+                                  cy={y}
+                                  r="3"
+                                  fill="#3B82F6"
+                                  stroke="#FFFFFF"
+                                  strokeWidth="2"
+                                />
+                                <text
+                                  x={positions[index]}
+                                  y={y - 10}
+                                  textAnchor="middle"
+                                  fontSize="9"
+                                  fill="#3B82F6"
+                                  fontWeight="600"
+                                >
+                                  {percentage}%
+                                </text>
+                              </g>
+                            );
+                          })}
+                          
+                          {/* Utilizado line (if data exists) */}
+                          {historicoMargens.some(item => item.valorUtilizado && item.valorUtilizado > 0) && (
+                            <>
+                              <polyline
+                                points={historicoMargens.map((item, index) => {
+                                  const utilizadoValue = item.valorUtilizado || 0;
+                                  const y = 170 - ((utilizadoValue / maxValue) * chartHeight * 0.8);
+                                  return `${positions[index]},${y}`;
+                                }).join(' ')}
+                                fill="none"
+                                stroke="#EF4444"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeDasharray="4,4"
+                              />
+                              
+                              {/* Utilizado points */}
+                              {historicoMargens.map((item, index) => {
+                                const utilizadoValue = item.valorUtilizado || 0;
+                                if (utilizadoValue === 0) return null;
+                                
+                                const y = 170 - ((utilizadoValue / maxValue) * chartHeight * 0.8);
+                                const percentage = ((utilizadoValue / item.valorMargem) * 100).toFixed(1);
+                                
+                                return (
+                                  <g key={`utilizado-${index}`}>
+                                    <circle
+                                      cx={positions[index]}
+                                      cy={y}
+                                      r="3"
+                                      fill="#EF4444"
+                                      stroke="#FFFFFF"
+                                      strokeWidth="2"
+                                    />
+                                    <text
+                                      x={positions[index]}
+                                      y={y + 15}
+                                      textAnchor="middle"
+                                      fontSize="9"
+                                      fill="#EF4444"
+                                      fontWeight="600"
+                                    >
+                                      {percentage}%
+                                    </text>
+                                  </g>
+                                );
+                              })}
+                            </>
+                          )}
+                          
+                          {/* X-axis labels */}
+                          {historicoMargens.map((item, index) => (
+                            <text
+                              key={`label-${index}`}
+                              x={positions[index]}
+                              y={190}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fill="#6B7280"
+                              fontWeight="500"
+                            >
+                              {getMonthName(item.data)}
+                            </text>
+                          ))}
+                        </>
+                      );
+                    })()}
+                  </svg>
                 </div>
-              ))}
+              </div>
 
-              {/* Summary Card */}
-              <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                <div className="text-center mb-3">
-                  <div className="text-xs font-medium text-primary">Resumo do Período</div>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-3 gap-2 mt-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                  <div className="text-xs text-yellow-700 mb-1">Margem Média</div>
+                  <div className="text-sm font-bold text-yellow-800">
+                    {formatCurrency(historicoMargens.reduce((acc, item) => acc + item.valorMargem, 0) / historicoMargens.length)}
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3 text-center text-xs">
-                  <div className="space-y-1">
-                    <div className="text-muted-foreground">Margem Média</div>
-                    <div className="font-bold text-primary">
-                      {formatCurrency(historicoMargens.reduce((acc, item) => acc + item.valorMargem, 0) / historicoMargens.length)}
-                    </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                  <div className="text-xs text-blue-700 mb-1">Rendimento Médio</div>
+                  <div className="text-sm font-bold text-blue-800">
+                    {formatCurrency(historicoMargens.reduce((acc, item) => acc + item.valorRendimento, 0) / historicoMargens.length)}
                   </div>
-                  <div className="space-y-1">
-                    <div className="text-muted-foreground">Rendimento Médio</div>
-                    <div className="font-bold text-accent">
-                      {formatCurrency(historicoMargens.reduce((acc, item) => acc + item.valorRendimento, 0) / historicoMargens.length)}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-muted-foreground">Total Utilizado</div>
-                    <div className="font-bold text-destructive">
-                      {formatCurrency(historicoMargens.reduce((acc, item) => acc + (item.valorUtilizado || 0), 0))}
-                    </div>
+                </div>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                  <div className="text-xs text-red-700 mb-1">Total Utilizado</div>
+                  <div className="text-sm font-bold text-red-800">
+                    {formatCurrency(historicoMargens.reduce((acc, item) => acc + (item.valorUtilizado || 0), 0))}
                   </div>
                 </div>
               </div>
