@@ -281,28 +281,28 @@ export const Dashboard = () => {
           ) : (
             <div className="space-y-4">
               {/* Legend */}
-              <div className="flex justify-center gap-4 text-xs flex-wrap">
+              <div className="flex justify-center items-center gap-6 text-sm mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-3 bg-gradient-to-t from-yellow-400 to-yellow-300 rounded-sm"></div>
-                  <span>Margem Total</span>
+                  <span className="whitespace-nowrap">Margem Total</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span>Rendimento</span>
+                  <span className="whitespace-nowrap">Rendimento</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span>Utilizado</span>
+                  <span className="whitespace-nowrap">Utilizado</span>
                 </div>
               </div>
 
               {/* Chart Container */}
-              <div className="relative">
-                <div className="h-64 bg-gradient-to-b from-muted/5 to-muted/20 rounded-lg p-2 overflow-hidden">
+              <div className="relative w-full">
+                <div className="h-72 bg-gradient-to-b from-muted/5 to-muted/20 rounded-lg p-1 overflow-hidden">
                   <svg 
                     width="100%" 
                     height="100%" 
-                    viewBox="0 0 400 220" 
+                    viewBox="0 0 500 240" 
                     className="overflow-visible"
                   >
                     <defs>
@@ -316,9 +316,9 @@ export const Dashboard = () => {
                     {[0, 1, 2, 3, 4].map((line) => (
                       <line
                         key={line}
-                        x1="30"
+                        x1="40"
                         y1={30 + (line * 35)}
-                        x2="370"
+                        x2="460"
                         y2={30 + (line * 35)}
                         stroke="#E5E7EB"
                         strokeWidth="0.5"
@@ -333,10 +333,10 @@ export const Dashboard = () => {
                         ...historicoMargens.map(h => h.valorUtilizado || 0)
                       );
                       
-                      const barWidth = 35;
-                      const chartWidth = 340;
+                      const barWidth = 45;
+                      const chartWidth = 420;
                       const chartHeight = 140;
-                      const startX = 50;
+                      const startX = 60;
                       
                       // Calculate positions for each data point
                       const positions = historicoMargens.map((_, index) => 
@@ -359,14 +359,14 @@ export const Dashboard = () => {
                                   width={barWidth}
                                   height={barHeight}
                                   fill="url(#barGradient)"
-                                  rx="3"
+                                  rx="4"
                                 />
                                 {/* Bar value label */}
                                 <text
                                   x={positions[index]}
-                                  y={y - 5}
+                                  y={y - 8}
                                   textAnchor="middle"
-                                  fontSize="11"
+                                  fontSize="14"
                                   fill="#374151"
                                   fontWeight="600"
                                 >
@@ -384,7 +384,7 @@ export const Dashboard = () => {
                             }).join(' ')}
                             fill="none"
                             stroke="#3B82F6"
-                            strokeWidth="2.5"
+                            strokeWidth="3"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
@@ -398,16 +398,16 @@ export const Dashboard = () => {
                                 <circle
                                   cx={positions[index]}
                                   cy={y}
-                                  r="4"
+                                  r="5"
                                   fill="#3B82F6"
                                   stroke="#FFFFFF"
                                   strokeWidth="2"
                                 />
                                 <text
                                   x={positions[index]}
-                                  y={y - 12}
+                                  y={y - 15}
                                   textAnchor="middle"
-                                  fontSize="10"
+                                  fontSize="12"
                                   fill="#3B82F6"
                                   fontWeight="600"
                                 >
@@ -428,10 +428,10 @@ export const Dashboard = () => {
                                 }).join(' ')}
                                 fill="none"
                                 stroke="#EF4444"
-                                strokeWidth="2"
+                                strokeWidth="2.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                strokeDasharray="4,4"
+                                strokeDasharray="5,5"
                               />
                               
                               {/* Utilizado points */}
@@ -446,16 +446,16 @@ export const Dashboard = () => {
                                     <circle
                                       cx={positions[index]}
                                       cy={y}
-                                      r="3"
+                                      r="4"
                                       fill="#EF4444"
                                       stroke="#FFFFFF"
                                       strokeWidth="2"
                                     />
                                     <text
                                       x={positions[index]}
-                                      y={y + 15}
+                                      y={y + 18}
                                       textAnchor="middle"
-                                      fontSize="9"
+                                      fontSize="11"
                                       fill="#EF4444"
                                       fontWeight="600"
                                     >
@@ -472,9 +472,9 @@ export const Dashboard = () => {
                             <text
                               key={`label-${index}`}
                               x={positions[index]}
-                              y={195}
+                              y={205}
                               textAnchor="middle"
-                              fontSize="11"
+                              fontSize="13"
                               fill="#6B7280"
                               fontWeight="500"
                             >
