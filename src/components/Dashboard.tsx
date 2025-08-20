@@ -2,17 +2,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { User, CreditCard, Banknote, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { convenioService, LimiteUtilizado } from "@/services/convenioService";
+import { colaboradorService, GraficoFolhaColaborador } from "@/services/colaboradorService";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-
-interface ChartData {
-  valorRendimento: number;
-  valorUtilizado: number;
-  valorMargem: number;
-  data: string;
-}
 
 export const Dashboard = () => {
   const {
@@ -26,54 +20,15 @@ export const Dashboard = () => {
 
   const [valorMargemDisponivelCartao, setValorMargemDisponivelCartao] = useState<number>(0);
   const [valorMargemDisponivelEmprestimo, setValorMargemDisponivelEmprestimo] = useState<number>(0);
+  const [chartData, setChartData] = useState<GraficoFolhaColaborador[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionTime, setSessionTime] = useState<string>("00:00:00");
-  const [selectedData, setSelectedData] = useState<ChartData | null>(null);
+  const [selectedData, setSelectedData] = useState<GraficoFolhaColaborador | null>(null);
 
   // Extrair login do objeto Global se existir
   const userLogin = (userData as { Global?: { login?: string } })?.Global?.login || (userData as { login?: string })?.login || (userData as { nome?: string })?.nome || "Usuário";
   
-  // Dados mockados baseados no exemplo fornecido
-  const chartData: ChartData[] = [
-    {
-      valorRendimento: 1234.55,
-      valorUtilizado: 0,
-      valorMargem: 2323.00,
-      data: "03/25"
-    },
-    {
-      valorRendimento: 1460.00,
-      valorUtilizado: 0,
-      valorMargem: 3026.00,
-      data: "04/25"
-    },
-    {
-      valorRendimento: 1234.55,
-      valorUtilizado: 0.00,
-      valorMargem: 2849.00,
-      data: "05/25"
-    },
-    {
-      valorRendimento: 1100.00,
-      valorUtilizado: 0.00,
-      valorMargem: 2926.00,
-      data: "06/25"
-    },
-    {
-      valorRendimento: 1234.55,
-      valorUtilizado: 0.00,
-      valorMargem: 3023.00,
-      data: "07/25"
-    },
-    {
-      valorRendimento: 1900.00,
-      valorUtilizado: 0.00,
-      valorMargem: 2849.00,
-      data: "08/25"
-    }
-  ];
-
   // Calcular total utilizado no período
   const totalUtilizadoPeriodo = chartData.reduce((total, item) => total + item.valorUtilizado, 0);
 
@@ -131,8 +86,8 @@ export const Dashboard = () => {
         const valorMargemCartao = colaborador.folhaColaborador ? colaborador.folhaColaborador.valorMargemCartao : 0;
         const valorMargemEmprestimo = colaborador.folhaColaborador ? colaborador.folhaColaborador.valorMargemEmprestimo : 0;
 
-        const valorMargemUtilizadoCartao = listaValorUtilizado[1].valorUtilizado || 0;
-        const valorMargemUtilizadoEmprestimo = listaValorUtilizado[0].valorUtilizado || 0;
+        const valorMargemUtilizadoCartao = listaValorUtilizado[1]?.valorUtilizado || 0;
+        const valorMargemUtilizadoEmprestimo = listaValorUtilizado[0]?.valorUtilizado || 0;
 
         if (listaValorUtilizado.length >= 2) {
           setValorMargemDisponivelCartao(valorMargemCartao - valorMargemUtilizadoCartao);
@@ -141,11 +96,59 @@ export const Dashboard = () => {
           setValorMargemDisponivelCartao(0);
           setValorMargemDisponivelEmprestimo(0);
         }
+
+        // Buscar dados do gráfico
+        const graficoData = await colaboradorService.buscarGraficoFolhaColaborador(
+          colaborador.id,
+          6, // 6 meses fixo conforme solicitado
+          authToken
+        );
+        
+        setChartData(graficoData);
       } catch (err) {
-        console.error("Erro ao buscar limites utilizados:", err);
-        setError("Falha ao carregar os dados de margem utilizada");
+        console.error("Erro ao buscar dados:", err);
+        setError("Falha ao carregar os dados do dashboard");
         setValorMargemDisponivelCartao(0);
         setValorMargemDisponivelEmprestimo(0);
+        // Manter dados mockados em caso de erro
+        setChartData([
+          {
+            valorRendimento: 1234.55,
+            valorUtilizado: 0,
+            valorMargem: 2323.00,
+            data: "03/25"
+          },
+          {
+            valorRendimento: 1460.00,
+            valorUtilizado: 0,
+            valorMargem: 3026.00,
+            data: "04/25"
+          },
+          {
+            valorRendimento: 1234.55,
+            valorUtilizado: 0.00,
+            valorMargem: 2849.00,
+            data: "05/25"
+          },
+          {
+            valorRendimento: 1100.00,
+            valorUtilizado: 0.00,
+            valorMargem: 2926.00,
+            data: "06/25"
+          },
+          {
+            valorRendimento: 1234.55,
+            valorUtilizado: 0.00,
+            valorMargem: 3023.00,
+            data: "07/25"
+          },
+          {
+            valorRendimento: 1900.00,
+            valorUtilizado: 0.00,
+            valorMargem: 2849.00,
+            data: "08/25"
+          }
+        ]);
       } finally {
         setLoading(false);
       }
@@ -310,7 +313,7 @@ export const Dashboard = () => {
                 }}
                 onClick={(event) => {
                   if (event && event.activePayload && event.activePayload[0]) {
-                    setSelectedData(event.activePayload[0].payload);
+                    setSelectedData(event.activePayload[0].payload as GraficoFolhaColaborador);
                   }
                 }}
               >

@@ -32,6 +32,14 @@ export interface ColaboradorDetalheData {
   [key: string]: unknown;
 }
 
+// Interface para os dados do gráfico
+export interface GraficoFolhaColaborador {
+  valorRendimento: number;
+  valorUtilizado: number;
+  valorMargem: number;
+  data: string;
+}
+
 export class ColaboradorService {
   private ipExterno = '';
 
@@ -99,6 +107,40 @@ export class ColaboradorService {
       return await response.json();
     } catch (error) {
       throw new Error(`Failed to fetch colaborador detalhe data: ${error}`);
+    }
+  }
+
+  async buscarGraficoFolhaColaborador(colaboradorId: string, meses: number, authorization: string): Promise<GraficoFolhaColaborador[]> {
+    // Get client IP for headers
+    const clientIp = await this.getClientIp();
+    
+    const headers = {
+      'Authorization': `Bearer ${authorization}`,
+      'Content-Type': 'application/json',
+      'X-Forwarded-For-Private': clientIp,
+      'X-Forwarded-For': clientIp
+    };
+
+    try {
+      const response = await fetch(`${environment.consigApiUrl}/colaborador/buscarGraficoFolhaColaborador/${colaboradorId}/${meses}`, {
+        method: 'GET',
+        headers
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: unknown = await response.json();
+      
+      // Verificar se é um array
+      if (!Array.isArray(data)) {
+        throw new Error("Resposta inválida da API: esperava um array");
+      }
+      
+      return data as GraficoFolhaColaborador[];
+    } catch (error) {
+      throw new Error(`Failed to fetch grafico folha colaborador data: ${error}`);
     }
   }
 }
