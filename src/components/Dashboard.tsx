@@ -311,15 +311,11 @@ export const Dashboard = () => {
                 }}
                 onClick={(event) => {
                   if (event && event.activePayload && event.activePayload[0]) {
-                    const rect = event.chartX ? event.currentTarget.getBoundingClientRect() : null;
-                    const mouseX = event.chartX || 0;
-                    const mouseY = event.chartY || 0;
-                    
-                    setSelectedData(event.activePayload[0].payload);
-                    setPopoverPosition({ 
-                      x: rect ? rect.left + mouseX : mouseX, 
-                      y: rect ? rect.top + mouseY : mouseY 
-                    });
+                     setSelectedData(event.activePayload[0].payload);
+                     setPopoverPosition({ 
+                       x: event.chartX || 200, 
+                       y: event.chartY || 100 
+                     });
                   }
                 }}
               >
