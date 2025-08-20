@@ -29,6 +29,7 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionTime, setSessionTime] = useState<string>("00:00:00");
+  const [selectedData, setSelectedData] = useState<ChartData | null>(null);
 
   // Extrair login do objeto Global se existir
   const userLogin = (userData as { Global?: { login?: string } })?.Global?.login || (userData as { login?: string })?.login || (userData as { nome?: string })?.nome || "Usuário";
@@ -304,19 +305,24 @@ export const Dashboard = () => {
                   left: 0,
                   bottom: 0,
                 }}
+                onClick={(data) => {
+                  if (data && data.activePayload && data.activePayload[0]) {
+                    setSelectedData(data.activePayload[0].payload);
+                  }
+                }}
               >
                 <defs>
                   <linearGradient id="colorRendimento" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+                    <stop offset="5%" stopColor="#1E4193" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#1E4193" stopOpacity={0.2}/>
                   </linearGradient>
                   <linearGradient id="colorMargem" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0.2}/>
+                    <stop offset="5%" stopColor="#F7DB14" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#F7DB14" stopOpacity={0.2}/>
                   </linearGradient>
                   <linearGradient id="colorUtilizado" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0.2}/>
+                    <stop offset="5%" stopColor="#DC2626" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#DC2626" stopOpacity={0.2}/>
                   </linearGradient>
                 </defs>
                 <XAxis 
@@ -331,30 +337,18 @@ export const Dashboard = () => {
                   tickLine={false}
                   tickFormatter={(value) => `R$ ${(value/1000).toFixed(0)}k`}
                 />
-                <Tooltip 
-                  formatter={(value: number, name: string) => [
-                    `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                    name === 'valorRendimento' ? 'Rendimento' :
-                    name === 'valorMargem' ? 'Margem' : 'Utilizado'
-                  ]}
-                  labelFormatter={(label) => `Mês: ${label}`}
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px'
-                  }}
-                />
                 <Legend 
                   formatter={(value) => 
                     value === 'valorRendimento' ? 'Rendimento' :
                     value === 'valorMargem' ? 'Margem' : 'Utilizado'
                   }
+                  wrapperStyle={{ fontSize: '11px' }}
                 />
                 <Area
                   type="monotone"
                   dataKey="valorRendimento"
                   stackId="1"
-                  stroke="hsl(var(--primary))"
+                  stroke="#1E4193"
                   fill="url(#colorRendimento)"
                   strokeWidth={2}
                 />
@@ -362,7 +356,7 @@ export const Dashboard = () => {
                   type="monotone"
                   dataKey="valorMargem"
                   stackId="1"
-                  stroke="hsl(var(--accent))"
+                  stroke="#F7DB14"
                   fill="url(#colorMargem)"
                   strokeWidth={2}
                 />
@@ -370,7 +364,7 @@ export const Dashboard = () => {
                   type="monotone"
                   dataKey="valorUtilizado"
                   stackId="1"
-                  stroke="hsl(var(--destructive))"
+                  stroke="#DC2626"
                   fill="url(#colorUtilizado)"
                   strokeWidth={2}
                 />
@@ -380,21 +374,60 @@ export const Dashboard = () => {
         </CardContent>
       </Card>
 
+      {/* Dados do clique no gráfico */}
+      {selectedData && (
+        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="pt-4">
+            <div className="text-center">
+              <p className="text-sm font-medium text-blue-700 mb-3">
+                Dados de {selectedData.data}
+              </p>
+              <div className="grid grid-cols-3 gap-4 text-xs">
+                <div>
+                  <p className="text-blue-600 font-medium">Rendimento</p>
+                  <p className="text-blue-900 font-bold">
+                    R$ {selectedData.valorRendimento.toLocaleString('pt-BR', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-yellow-600 font-medium">Margem</p>
+                  <p className="text-yellow-900 font-bold">
+                    R$ {selectedData.valorMargem.toLocaleString('pt-BR', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-red-600 font-medium">Utilizado</p>
+                  <p className="text-red-900 font-bold">
+                    R$ {selectedData.valorUtilizado.toLocaleString('pt-BR', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Total Utilizado no Período */}
       <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
-        <CardContent className="pt-6">
+        <CardContent className="pt-4 pb-4">
           <div className="text-center">
-            <p className="text-sm font-medium text-orange-700 mb-2">
+            <p className="text-sm font-medium text-orange-700 mb-1">
               Total Utilizado no Período
             </p>
-            <p className="text-3xl font-bold text-orange-900">
+            <p className="text-2xl font-bold text-orange-900">
               R$ {totalUtilizadoPeriodo.toLocaleString('pt-BR', { 
                 minimumFractionDigits: 2, 
                 maximumFractionDigits: 2 
               })}
-            </p>
-            <p className="text-xs text-orange-600 mt-1">
-              Últimos 6 meses
             </p>
           </div>
         </CardContent>
