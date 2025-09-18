@@ -6,9 +6,10 @@ import { Dashboard } from "@/components/Dashboard";
 import { ContractsScreen } from "@/components/ContractsScreen";
 import { ContractDetail } from "@/components/ContractDetail";
 import { ProductsScreen } from "@/components/ProductsScreen";
+import { TokenScreen } from "@/components/TokenScreen";
 import { MobileLayout } from "@/components/MobileLayout";
 
-type Screen = "login" | "forgot-password" | "dashboard" | "contracts" | "contract-detail" | "products";
+type Screen = "login" | "forgot-password" | "dashboard" | "contracts" | "contract-detail" | "products" | "token";
 
 // Definindo a interface do contrato com os campos corretos
 interface ContractDisplay {
@@ -49,6 +50,9 @@ const Index = () => {
         break;
       case "produtos":
         setCurrentScreen("products");
+        break;
+      case "token":
+        setCurrentScreen("token");
         break;
       case "sair":
         setPreviousTab("aprovados"); // Reset to approved contracts tab on logout
@@ -114,6 +118,15 @@ const Index = () => {
         return (
           <MobileLayout showTabbar currentTab="produtos" onTabChange={handleTabChange}>
             <ProductsScreen 
+              onBack={() => setCurrentScreen("dashboard")}
+            />
+          </MobileLayout>
+        );
+      
+      case "token":
+        return (
+          <MobileLayout showTabbar currentTab="token" onTabChange={handleTabChange}>
+            <TokenScreen 
               onBack={() => setCurrentScreen("dashboard")}
             />
           </MobileLayout>
