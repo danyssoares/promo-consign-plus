@@ -7,8 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 import { SelectMatriculaModal } from "@/components/SelectMatriculaModal";
 import { BiometricService } from "@/services/biometricService";
 import logo from "@/assets/logo.png";
-
-export const LoginScreen = ({ onLogin, onForgotPassword }: { 
+export const LoginScreen = ({
+  onLogin,
+  onForgotPassword
+}: {
   onLogin: () => void;
   onForgotPassword: () => void;
 }) => {
@@ -24,9 +26,17 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
   const [showBiometricSaveDialog, setShowBiometricSaveDialog] = useState(false);
-  
-  const { setUsuarioLogado, setAuthorizationData, setLastLogin, getLastLogin, setColaborador, getUsuarioLogado } = useAuth();
-  const { toast } = useToast();
+  const {
+    setUsuarioLogado,
+    setAuthorizationData,
+    setLastLogin,
+    getLastLogin,
+    setColaborador,
+    getUsuarioLogado
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
 
   // Carregar último login salvo
   useEffect(() => {
@@ -42,7 +52,6 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       try {
         const available = await BiometricService.isBiometricAvailable();
         setIsBiometricAvailable(available);
-        
         if (available) {
           const enabled = await BiometricService.isBiometricEnabled(username);
           setIsBiometricEnabled(enabled);
@@ -51,10 +60,8 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
         console.error('Erro ao verificar biometria:', error);
       }
     };
-
     checkBiometricAvailability();
   }, [username]);
-
   const handleSelectMatricula = async (matricula: MatriculaData) => {
     try {
       // Verificar se temos os dados necessários
@@ -62,39 +69,34 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
         toast({
           title: "Erro",
           description: "Dados insuficientes para continuar.",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
 
       // Chamar a API para buscar os detalhes do colaborador com a matrícula selecionada
-      const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(
-        documentoFederal, 
-        matricula.codigoMatricula, 
-        authToken
-      );
-      
+      const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(documentoFederal, matricula.codigoMatricula, authToken);
       if (colaboradorDetalhe) {
         // Salvar dados do colaborador no contexto
         setColaborador(colaboradorDetalhe as any);
-        
+
         // Atualizar o nome do usuário logado
         /*const updatedUserData = {
           ...userData,
           nome: colaboradorDetalhe.nome
         };
         setUsuarioLogado(updatedUserData);*/
-        
+
         // Fechar o modal
         setShowMatriculaModal(false);
-        
+
         // Continuar com o fluxo de login
         await completeLogin();
       } else {
         toast({
           title: "Erro",
           description: "Não foi possível obter os dados do colaborador.",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     } catch (error) {
@@ -102,47 +104,46 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao selecionar a matrícula.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleCancelMatricula = () => {
     setShowMatriculaModal(false);
     setIsLoading(false);
   };
-
   const handleBiometricLogin = async () => {
     if (!isBiometricAvailable) {
       toast({
         title: "Biometria não disponível",
         description: "A biometria não está disponível neste dispositivo.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setIsLoading(true);
-
     try {
       const result = await BiometricService.biometricLogin();
-      
       if (!result) {
         toast({
           title: "Erro no login biométrico",
           description: "Não foi possível realizar o login com biometria.",
-          variant: "destructive",
+          variant: "destructive"
         });
         setIsLoading(false);
         return;
       }
-
-      const { userData: biometricUserData, authToken: biometricAuthToken, documentoFederal: biometricDocumento, matriculas: biometricMatriculas } = result;
+      const {
+        userData: biometricUserData,
+        authToken: biometricAuthToken,
+        documentoFederal: biometricDocumento,
+        matriculas: biometricMatriculas
+      } = result;
 
       // Armazenar dados temporariamente
       setUserData(biometricUserData);
       setAuthToken(biometricAuthToken);
-      
+
       // Store auth data
       setUsuarioLogado(biometricUserData);
       setAuthorizationData(biometricAuthToken);
@@ -151,44 +152,38 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       // Verificar se temos documento federal e matrículas
       if (biometricDocumento && biometricMatriculas) {
         setDocumentoFederal(biometricDocumento);
-        
         if (biometricMatriculas && Array.isArray(biometricMatriculas)) {
           if (biometricMatriculas.length === 0) {
             // Nenhuma matrícula encontrada
             toast({
               title: "Nenhuma matrícula encontrada",
               description: "Não foi possível encontrar matrículas para este colaborador.",
-              variant: "destructive",
+              variant: "destructive"
             });
             setIsLoading(false);
             return;
           } else if (biometricMatriculas.length === 1) {
             // Apenas uma matrícula, selecionar automaticamente
             const matricula = biometricMatriculas[0];
-            const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(
-              biometricDocumento, 
-              matricula.codigoMatricula, 
-              biometricAuthToken
-            );
-            
+            const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(biometricDocumento, matricula.codigoMatricula, biometricAuthToken);
             if (colaboradorDetalhe) {
               // Salvar dados do colaborador no contexto
               setColaborador(colaboradorDetalhe as any);
-              
+
               // Atualizar o nome do usuário logado
               const updatedUserData = {
                 ...biometricUserData,
                 nome: colaboradorDetalhe.nome
               };
               setUsuarioLogado(updatedUserData);
-              
+
               // Continuar com o fluxo de login
               await completeLogin(updatedUserData);
             } else {
               toast({
                 title: "Colaborador não encontrado",
                 description: "Não foi possível encontrar os dados do colaborador.",
-                variant: "destructive",
+                variant: "destructive"
               });
               setIsLoading(false);
               return;
@@ -205,7 +200,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
           toast({
             title: "Nenhuma matrícula encontrada",
             description: "Não foi possível encontrar matrículas para este colaborador.",
-            variant: "destructive",
+            variant: "destructive"
           });
           setIsLoading(false);
           return;
@@ -219,12 +214,11 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       toast({
         title: "Erro no login biométrico",
         description: error instanceof Error ? error.message : "Erro desconhecido ao realizar login com biometria",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsLoading(false);
     }
   };
-
   const completeLogin = async (userDataParam?: UserData) => {
     try {
       // Verificar se temos os dados do usuário
@@ -236,7 +230,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
           toast({
             title: "Erro",
             description: "Dados do usuário não encontrados.",
-            variant: "destructive",
+            variant: "destructive"
           });
           return;
         }
@@ -248,7 +242,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
         // You can implement the modal later if needed
         toast({
           title: "Aviso",
-          description: "Termos de aceite pendentes. Implementar modal de aceite.",
+          description: "Termos de aceite pendentes. Implementar modal de aceite."
         });
       }
 
@@ -259,47 +253,44 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       toast({
         title: "Erro no login",
         description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
   const handleLogin = async () => {
     if (!username || !password) {
       toast({
         title: "Erro",
         description: "Verifique os campos inválidos.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setIsLoading(true);
-
     try {
       // Step 1: Get login token
       const loginResponse = await loginService.getLogin(username, password);
-      
+
       // Verificar se o token foi retornado
       if (!loginResponse.access_token) {
         toast({
           title: "Acesso negado",
           description: "Não foi possível autenticar o usuário.",
-          variant: "destructive",
+          variant: "destructive"
         });
         setIsLoading(false);
         return;
       }
-      
+
       // Step 2: Get user data
       const userDataResponse = await loginService.buscarDadosUsuarioLogado(`bearer ${loginResponse.access_token}`);
-      
+
       // Armazenar dados temporariamente
       setUserData(userDataResponse);
       setAuthToken(loginResponse.access_token);
-      
+
       // Step 3: Store auth data
       setUsuarioLogado(userDataResponse);
       setAuthorizationData(loginResponse.access_token);
@@ -308,7 +299,6 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       // Verificar se deve oferecer salvamento biométrico
       const biometricAvailable = await BiometricService.isBiometricAvailable();
       const biometricAlreadyEnabled = await BiometricService.isBiometricEnabled();
-      
       if (biometricAvailable && !biometricAlreadyEnabled) {
         // Mostrar diálogo para perguntar se quer salvar dados para biometria
         setShowBiometricSaveDialog(true);
@@ -316,15 +306,13 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
 
       // Step 4: Verificar se o campo documentoFederal existe e não é nulo/vazio
       const documento = userDataResponse?.pessoaFisica?.pessoa?.documentoFederal;
-      
       if (documento && documento !== null && documento !== undefined && documento !== '') {
         // Limpar caracteres especiais do documento
         const documentoLimpo = documento.replace(/[.\-/]/g, '');
         setDocumentoFederal(documentoLimpo);
-        
+
         // Buscar dados do colaborador
         const matriculas = await colaboradorService.buscarPorMatricula(documentoLimpo, loginResponse.access_token);
-        
         if (matriculas) {
           // Verificar se o colaborador tem matrículas
           if (matriculas && Array.isArray(matriculas)) {
@@ -333,43 +321,38 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
               toast({
                 title: "Nenhuma matrícula encontrada",
                 description: "Não foi possível encontrar matrículas para este colaborador.",
-                variant: "destructive",
+                variant: "destructive"
               });
               setIsLoading(false);
               return;
             } else if (matriculas.length === 1) {
               // Apenas uma matrícula, selecionar automaticamente
               const matricula = matriculas[0];
-              const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(
-                documentoLimpo, 
-                matricula.codigoMatricula, 
-                loginResponse.access_token
-              );
-              
+              const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(documentoLimpo, matricula.codigoMatricula, loginResponse.access_token);
               if (colaboradorDetalhe) {
                 // Salvar dados do colaborador no contexto
                 setColaborador(colaboradorDetalhe as any);
-                
+
                 // Atualizar o nome do usuário logado
                 const updatedUserData = {
                   ...userDataResponse,
                   nome: colaboradorDetalhe.nome
                 };
                 setUsuarioLogado(updatedUserData);
-                
+
                 // Continuar com o fluxo de login
                 await completeLogin(updatedUserData);
               } else {
                 toast({
                   title: "Colaborador não encontrado",
                   description: "Não foi possível encontrar os dados do colaborador.",
-                  variant: "destructive",
+                  variant: "destructive"
                 });
                 setIsLoading(false);
                 return;
               }
               // Mais de uma matrícula, abrir modal para seleção
-              const matriculasForModal = matriculas.map(m => ({ 
+              const matriculasForModal = matriculas.map(m => ({
                 codigoMatricula: m.codigoMatricula
               }));
               setMatriculas(matriculasForModal);
@@ -382,7 +365,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
             toast({
               title: "Nenhuma matrícula encontrada",
               description: "Não foi possível encontrar matrículas para este colaborador.",
-              variant: "destructive",
+              variant: "destructive"
             });
             setIsLoading(false);
             return;
@@ -392,7 +375,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
           toast({
             title: "Colaborador não encontrado",
             description: "Não foi possível encontrar os dados do colaborador.",
-            variant: "destructive",
+            variant: "destructive"
           });
           setIsLoading(false);
           return;
@@ -401,49 +384,40 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
         // Se não houver documento federal, continuar com o fluxo normal
         await completeLogin(userDataResponse);
       }
-
     } catch (error) {
       console.error('Login error:', error);
       toast({
         title: "Erro no login",
         description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
+        variant: "destructive"
       });
       setIsLoading(false);
     }
   };
-
   const handleSaveBiometricCredentials = async (save: boolean) => {
     setShowBiometricSaveDialog(false);
-    
     if (save) {
       try {
         await BiometricService.saveCredentials(username, password);
         setIsBiometricEnabled(true);
         toast({
           title: "Biometria configurada",
-          description: "Seus dados foram salvos para login com biometria.",
+          description: "Seus dados foram salvos para login com biometria."
         });
       } catch (error) {
         console.error('Erro ao salvar credenciais biométricas:', error);
         toast({
           title: "Erro",
           description: "Não foi possível configurar a biometria.",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     }
   };
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col justify-center pc-container max-w-sm mx-auto">
-      <div className="mb-12 text-center mt-8">
+  return <div className="min-h-screen bg-background flex flex-col justify-center pc-container max-w-sm mx-auto">
+      <div className="mb-12 text-center mt-8 my-[17px]">
         <div className="mb-8 flex justify-center">
-          <img 
-            src={logo} 
-            alt="PromoConsig Logo" 
-            className="h-16 w-auto"
-          />
+          <img src={logo} alt="PromoConsig Logo" className="h-16 w-auto" />
         </div>
         <h2 className="pc-text-title mb-4">Bem-vindo de volta</h2>
       </div>
@@ -451,50 +425,26 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       <div className="space-y-6">
         <div>
           <label className="block pc-text-body mb-2">Nome de usuário</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="pc-input w-full"
-            placeholder="Digite seu usuário"
-          />
+          <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="pc-input w-full" placeholder="Digite seu usuário" />
         </div>
 
         <div>
           <label className="block pc-text-body mb-2">Senha</label>
           <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pc-input w-full pr-12"
-              placeholder="Digite sua senha"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-            >
+            <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} className="pc-input w-full pr-12" placeholder="Digite sua senha" />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
         </div>
 
         <div className="text-center">
-          <button 
-            type="button"
-            onClick={onForgotPassword}
-            className="text-muted-foreground pc-text-caption underline"
-          >
+          <button type="button" onClick={onForgotPassword} className="text-muted-foreground pc-text-caption underline">
             Esqueceu a senha?
           </button>
         </div>
 
-        <button 
-          onClick={handleLogin} 
-          disabled={isLoading}
-          className="pc-btn-primary w-full disabled:opacity-50"
-        >
+        <button onClick={handleLogin} disabled={isLoading} className="pc-btn-primary w-full disabled:opacity-50">
           {isLoading ? "Entrando..." : "Entrar"}
         </button>
 
@@ -502,30 +452,16 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
           Ou entrar com
         </div>
 
-        {isBiometricAvailable && isBiometricEnabled && (
-          <button 
-            onClick={handleBiometricLogin}
-            disabled={isLoading}
-            className={`w-full flex items-center justify-center gap-2 pc-btn-secondary ${
-              isLoading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
+        {isBiometricAvailable && isBiometricEnabled && <button onClick={handleBiometricLogin} disabled={isLoading} className={`w-full flex items-center justify-center gap-2 pc-btn-secondary ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
             <Fingerprint size={20} />
             Biometria
-          </button>
-        )}
+          </button>}
       </div>
 
-      <SelectMatriculaModal
-        matriculas={matriculas}
-        onSelect={handleSelectMatricula}
-        onCancel={handleCancelMatricula}
-        isOpen={showMatriculaModal}
-      />
+      <SelectMatriculaModal matriculas={matriculas} onSelect={handleSelectMatricula} onCancel={handleCancelMatricula} isOpen={showMatriculaModal} />
 
       {/* Dialog para salvar credenciais biométricas */}
-      {showBiometricSaveDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      {showBiometricSaveDialog && <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-background rounded-lg p-6 max-w-sm w-full">
             <div className="text-center mb-6">
               <Fingerprint size={48} className="text-primary mx-auto mb-4" />
@@ -535,22 +471,14 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
               </p>
             </div>
             <div className="flex gap-3">
-              <button
-                onClick={() => handleSaveBiometricCredentials(false)}
-                className="flex-1 pc-btn-secondary"
-              >
+              <button onClick={() => handleSaveBiometricCredentials(false)} className="flex-1 pc-btn-secondary">
                 Agora não
               </button>
-              <button
-                onClick={() => handleSaveBiometricCredentials(true)}
-                className="flex-1 pc-btn-primary"
-              >
+              <button onClick={() => handleSaveBiometricCredentials(true)} className="flex-1 pc-btn-primary">
                 Salvar
               </button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
