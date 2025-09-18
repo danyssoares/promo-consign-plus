@@ -6,6 +6,7 @@ export interface ColaboradorData {
   nome: string;
   matricula: string;
   cpf: string;
+  codigoMatricula: string; // Adicionar esta propriedade que vem da API
   matriculas?: MatriculaData[];
   // Adicione outras propriedades conforme necessário
   [key: string]: unknown;
@@ -50,7 +51,7 @@ export class ColaboradorService {
     return this.ipExterno;
   }
 
-  async buscarPorMatricula(matricula: string, authorization: string): Promise<ColaboradorData | null> {
+  async buscarPorMatricula(matricula: string, authorization: string): Promise<ColaboradorData[] | null> {
     // Get client IP for headers
     const clientIp = await this.getClientIp();
     

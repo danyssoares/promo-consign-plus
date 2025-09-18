@@ -153,7 +153,7 @@ export class BiometricService {
           documentoFederal, 
           loginResponse.access_token
         );
-        matriculas = colaboradorData ? [colaboradorData] : [];
+        matriculas = colaboradorData || [];
       }
 
       return {

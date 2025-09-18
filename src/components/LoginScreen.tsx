@@ -367,9 +367,11 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
                 setIsLoading(false);
                 return;
               }
-            } else {
               // Mais de uma matrícula, abrir modal para seleção
-              setMatriculas(matriculas);
+              const matriculasForModal = matriculas.map(m => ({ 
+                codigoMatricula: m.codigoMatricula
+              }));
+              setMatriculas(matriculasForModal);
               setShowMatriculaModal(true);
               // Não continuar o fluxo ainda, aguardar seleção do usuário
               return;
