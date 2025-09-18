@@ -1,5 +1,6 @@
 import { environment } from '@/lib/environment';
 import { IpDetection } from '@/lib/ipDetection';
+import { ApiErrorHandler } from '@/lib/errorHandler';
 import { Colaborador } from './convenioService';
 
 export interface LoginResponse {
@@ -64,16 +65,12 @@ export class LoginService {
     };
 
     try {
-      const response = await fetch(`${environment.securityUrl}/oauth/token`, {
+      const response = await ApiErrorHandler.fetchWithErrorHandling(`${environment.securityUrl}/oauth/token`, {
         //const response = await fetch('/api/services/consig-security/oauth/token', {
         method: 'POST',
         headers,
         body: param
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       return await response.json();
     } catch (error) {
@@ -93,15 +90,11 @@ export class LoginService {
     };
 
     try {
-    const response = await fetch(`${environment.consigApiUrl}/usuario/buscarDadosUsuarioLogado`, {
+    const response = await ApiErrorHandler.fetchWithErrorHandling(`${environment.consigApiUrl}/usuario/buscarDadosUsuarioLogado`, {
     //const response = await fetch(`/api/services/usuario/buscarDadosUsuarioLogado`, {
         method: 'GET',
         headers
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       return await response.json();
     } catch (error) {

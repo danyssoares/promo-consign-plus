@@ -1,5 +1,6 @@
 import { environment } from '@/lib/environment';
 import { IpDetection } from '@/lib/ipDetection';
+import { ApiErrorHandler } from '@/lib/errorHandler';
 
 export interface ContratoHistorico {
   id: string; // Número do Contrato
@@ -39,17 +40,13 @@ export class ContratoService {
     };
 
     try {
-      const response = await fetch(
+      const response = await ApiErrorHandler.fetchWithErrorHandling(
         `${environment.consigApiUrl}/contrato/buscarHistoricoPorColaborador/${idColaborador}/${idUsuarioLogado}`,
         {
           method: 'GET',
           headers
         }
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data = await response.json();
       return Array.isArray(data) ? data : [];

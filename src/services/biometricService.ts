@@ -162,11 +162,13 @@ export class BiometricService {
         documentoFederal,
         matriculas
       };
-    } catch (error) {
-      console.error('Erro no login biométrico:', error);
-      // Remover credenciais inválidas
-      await this.removeCredentials();
-      throw error;
-    }
+      } catch (error) {
+        console.error('Erro no login biométrico:', error);
+        // Remover credenciais inválidas
+        await this.removeCredentials();
+        
+        // Re-lançar o erro original para que a mensagem da API seja preservada
+        throw error;
+      }
   }
 }

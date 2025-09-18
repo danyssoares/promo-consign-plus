@@ -1,5 +1,6 @@
 import { environment } from '@/lib/environment';
 import { IpDetection } from '@/lib/ipDetection';
+import { ApiErrorHandler } from '@/lib/errorHandler';
 
 export interface ColaboradorData {
   id: string;
@@ -63,20 +64,22 @@ export class ColaboradorService {
     };
 
     try {
-      const response = await fetch(`${environment.consigApiUrl}/colaborador/buscarPorMatricula/${matricula}`, {
+      const response = await ApiErrorHandler.fetchWithErrorHandling(`${environment.consigApiUrl}/colaborador/buscarPorMatricula/${matricula}`, {
         method: 'GET',
         headers
       });
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null; // Colaborador não encontrado
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Tratamento especial para 404 - colaborador não encontrado
+      if (response.status === 404) {
+        return null;
       }
 
       return await response.json();
     } catch (error) {
+      // Se for erro 404, retornar null sem lançar exceção
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
       throw new Error(`Failed to fetch colaborador data: ${error}`);
     }
   }
@@ -93,20 +96,22 @@ export class ColaboradorService {
     };
 
     try {
-      const response = await fetch(`${environment.consigApiUrl}/colaborador/buscarColaborador/${documento}/${codigoMatricula}`, {
+      const response = await ApiErrorHandler.fetchWithErrorHandling(`${environment.consigApiUrl}/colaborador/buscarColaborador/${documento}/${codigoMatricula}`, {
         method: 'GET',
         headers
       });
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null; // Colaborador não encontrado
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Tratamento especial para 404 - colaborador não encontrado
+      if (response.status === 404) {
+        return null;
       }
 
       return await response.json();
     } catch (error) {
+      // Se for erro 404, retornar null sem lançar exceção
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
       throw new Error(`Failed to fetch colaborador detalhe data: ${error}`);
     }
   }
@@ -123,14 +128,10 @@ export class ColaboradorService {
     };
 
     try {
-      const response = await fetch(`${environment.consigApiUrl}/colaborador/buscarGraficoFolhaColaborador/${colaboradorId}/${meses}`, {
+      const response = await ApiErrorHandler.fetchWithErrorHandling(`${environment.consigApiUrl}/colaborador/buscarGraficoFolhaColaborador/${colaboradorId}/${meses}`, {
         method: 'GET',
         headers
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data: unknown = await response.json();
       
