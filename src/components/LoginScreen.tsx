@@ -415,7 +415,7 @@ export const LoginScreen = ({
     }
   };
   return <div className="min-h-screen bg-background flex flex-col justify-center pc-container max-w-sm mx-auto">
-      <div className="mb-12 text-center mt-8 my-[20px]">
+      <div className="text-center mt-8 my-[20px]">
         <div className="mb-8 flex justify-center">
           <img src={logo} alt="PromoConsig Logo" className="h-16 w-auto" />
         </div>
