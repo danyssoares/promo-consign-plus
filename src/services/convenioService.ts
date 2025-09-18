@@ -1,5 +1,6 @@
 import { environment } from '@/lib/environment';
 import { IpDetection } from '@/lib/ipDetection';
+import { ApiErrorHandler } from '@/lib/errorHandler';
 
 export interface LimiteUtilizado {
   id: number;
@@ -114,14 +115,10 @@ export class ConvenioService {
     };
 
     try {
-      const response = await fetch(`${environment.consigApiUrl}/convenio/buscarLimiteUtilizadoPorColaborador/${colaboradorId}`, {
+      const response = await ApiErrorHandler.fetchWithErrorHandling(`${environment.consigApiUrl}/convenio/buscarLimiteUtilizadoPorColaborador/${colaboradorId}`, {
         method: 'GET',
         headers
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data: unknown = await response.json();
       
@@ -154,14 +151,10 @@ export class ConvenioService {
     };
 
     try {
-      const response = await fetch(`${environment.consigApiUrl}/convenio/buscarContrato/${idContrato}`, {
+      const response = await ApiErrorHandler.fetchWithErrorHandling(`${environment.consigApiUrl}/convenio/buscarContrato/${idContrato}`, {
         method: 'GET',
         headers
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data: unknown = await response.json();
       
@@ -190,17 +183,13 @@ export class ConvenioService {
     };
 
     try {
-      const response = await fetch(
+      const response = await ApiErrorHandler.fetchWithErrorHandling(
         `${environment.consigApiUrl}/convenio/listarRubricaConvenioParceiro/${idParceiro}/${idUsuarioLogado}/${idColaborador}`, 
         {
           method: 'GET',
           headers
         }
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data: unknown = await response.json();
       
