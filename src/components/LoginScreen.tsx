@@ -22,6 +22,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
   const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
+  const [showBiometricSaveDialog, setShowBiometricSaveDialog] = useState(false);
   
   const { setUsuarioLogado, setAuthorizationData, setLastLogin, getLastLogin, setColaborador, getUsuarioLogado } = useAuth();
   const { toast } = useToast();
@@ -42,7 +43,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
         setIsBiometricAvailable(available);
         
         if (available) {
-          const enabled = await BiometricService.isBiometricEnabled();
+          const enabled = await BiometricService.isBiometricEnabled(username);
           setIsBiometricEnabled(enabled);
         }
       } catch (error) {
@@ -51,7 +52,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
     };
 
     checkBiometricAvailability();
-  }, []);
+  }, [username]);
 
   const handleSelectMatricula = async (matricula: MatriculaData) => {
     try {
@@ -303,13 +304,13 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       setAuthorizationData(loginResponse.access_token);
       setLastLogin(username); // Salvar último login usado
 
-      // Salvar credenciais para biometria (com segurança)
-      try {
-        await BiometricService.saveCredentials(username, password);
-        setIsBiometricEnabled(true);
-      } catch (error) {
-        console.warn('Não foi possível salvar credenciais para biometria:', error);
-        // Não interromper o fluxo de login por causa disso
+      // Verificar se deve oferecer salvamento biométrico
+      const biometricAvailable = await BiometricService.isBiometricAvailable();
+      const biometricAlreadyEnabled = await BiometricService.isBiometricEnabled();
+      
+      if (biometricAvailable && !biometricAlreadyEnabled) {
+        // Mostrar diálogo para perguntar se quer salvar dados para biometria
+        setShowBiometricSaveDialog(true);
       }
 
       // Step 4: Verificar se o campo documentoFederal existe e não é nulo/vazio
@@ -409,6 +410,28 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
     }
   };
 
+  const handleSaveBiometricCredentials = async (save: boolean) => {
+    setShowBiometricSaveDialog(false);
+    
+    if (save) {
+      try {
+        await BiometricService.saveCredentials(username, password);
+        setIsBiometricEnabled(true);
+        toast({
+          title: "Biometria configurada",
+          description: "Seus dados foram salvos para login com biometria.",
+        });
+      } catch (error) {
+        console.error('Erro ao salvar credenciais biométricas:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível configurar a biometria.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center pc-container max-w-sm mx-auto">
       <div className="mb-12 text-center">
@@ -476,12 +499,12 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
           Ou entrar com
         </div>
 
-        {isBiometricAvailable && (
+        {isBiometricAvailable && isBiometricEnabled && (
           <button 
             onClick={handleBiometricLogin}
-            disabled={isLoading || !isBiometricEnabled}
+            disabled={isLoading}
             className={`w-full flex items-center justify-center gap-2 pc-btn-secondary ${
-              isLoading || !isBiometricEnabled ? 'opacity-50 cursor-not-allowed' : ''
+              isLoading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
             <Fingerprint size={20} />
@@ -496,6 +519,35 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
         onCancel={handleCancelMatricula}
         isOpen={showMatriculaModal}
       />
+
+      {/* Dialog para salvar credenciais biométricas */}
+      {showBiometricSaveDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg p-6 max-w-sm w-full">
+            <div className="text-center mb-6">
+              <Fingerprint size={48} className="text-primary mx-auto mb-4" />
+              <h3 className="pc-text-title mb-2">Configurar Biometria</h3>
+              <p className="pc-text-body text-muted-foreground">
+                Deseja salvar seus dados para fazer login mais rápido usando sua biometria?
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleSaveBiometricCredentials(false)}
+                className="flex-1 pc-btn-secondary"
+              >
+                Agora não
+              </button>
+              <button
+                onClick={() => handleSaveBiometricCredentials(true)}
+                className="flex-1 pc-btn-primary"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

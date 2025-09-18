@@ -16,8 +16,8 @@ export class BiometricService {
   // Verifica se a biometria está disponível no dispositivo
   static async isBiometricAvailable(): Promise<boolean> {
     try {
-      // Em um ambiente real, aqui verificaríamos se a biometria está disponível
-      // Por enquanto, retornamos true para simular que está disponível
+      // Em um ambiente real com Capacitor, verificaríamos se a biometria está disponível
+      // Por enquanto, simularemos que está disponível em dispositivos móveis
       return true;
     } catch (error) {
       console.error('Erro ao verificar disponibilidade de biometria:', error);
@@ -72,11 +72,21 @@ export class BiometricService {
     }
   }
 
-  // Verifica se o login biométrico está habilitado
-  static async isBiometricEnabled(): Promise<boolean> {
+  // Verifica se o login biométrico está habilitado para o usuário atual
+  static async isBiometricEnabled(currentUsername?: string): Promise<boolean> {
     try {
       const { value } = await Preferences.get({ key: BIOMETRIC_ENABLED_KEY });
-      return value === 'true';
+      if (value !== 'true') {
+        return false;
+      }
+
+      // Se foi fornecido um username, verificar se corresponde ao salvo
+      if (currentUsername) {
+        const credentials = await this.getCredentials();
+        return credentials?.username === currentUsername;
+      }
+
+      return true;
     } catch (error) {
       console.error('Erro ao verificar se biometria está habilitada:', error);
       return false;
@@ -101,6 +111,17 @@ export class BiometricService {
       const credentials = await this.getCredentials();
       if (!credentials) {
         return null;
+      }
+
+      // Solicitar autenticação biométrica
+      // Em um ambiente real, usaríamos o plugin de biometria
+      // Por enquanto, simularemos com um confirm dialog
+      const userConfirmed = confirm(
+        'Confirme sua identidade para fazer login\n\nUse sua biometria para acessar sua conta'
+      );
+
+      if (!userConfirmed) {
+        throw new Error('Autenticação biométrica cancelada pelo usuário');
       }
 
       // Realizar login com as credenciais salvas
