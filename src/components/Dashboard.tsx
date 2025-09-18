@@ -172,7 +172,7 @@ export const Dashboard = () => {
   return <div className="pc-container space-y-6 max-w-sm mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center pt-4 mb-6">
-        <img src={logo} alt="PromoConsig Logo" className="h-12 w-auto" />
+        <img src={logo} alt="PromoConsig Logo" className="h-10 w-auto" />
         
         {/* User Info */}
         <Popover>

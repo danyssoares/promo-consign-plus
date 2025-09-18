@@ -437,15 +437,15 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center pc-container max-w-sm mx-auto">
-      <div className="mb-12 text-center">
-        <div className="mb-6 flex justify-center">
+      <div className="mb-12 text-center mt-8">
+        <div className="mb-8 flex justify-center">
           <img 
             src={logo} 
             alt="PromoConsig Logo" 
             className="h-16 w-auto"
           />
         </div>
-        <h2 className="pc-text-title mb-8">Bem-vindo de volta</h2>
+        <h2 className="pc-text-title mb-4">Bem-vindo de volta</h2>
       </div>
 
       <div className="space-y-6">
