@@ -9,27 +9,36 @@ export interface ApiErrorResponse {
 
 export class ApiErrorHandler {
   /**
+   * Decodifica caracteres HTML em uma string
+   */
+  static decodeHtmlEntities(text: string): string {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+  }
+
+  /**
    * Extrai a mensagem de erro apropriada da resposta da API
    * Prioriza error_description se estiver presente, senão usa error ou message
    */
   static extractErrorMessage(errorResponse: ApiErrorResponse | string): string {
     if (typeof errorResponse === 'string') {
-      return errorResponse;
+      return this.decodeHtmlEntities(errorResponse);
     }
 
     // Verificar se tem error_description (prioridade)
     if (errorResponse.error_description && typeof errorResponse.error_description === 'string') {
-      return errorResponse.error_description;
+      return this.decodeHtmlEntities(errorResponse.error_description);
     }
 
     // Verificar se tem error
     if (errorResponse.error && typeof errorResponse.error === 'string') {
-      return errorResponse.error;
+      return this.decodeHtmlEntities(errorResponse.error);
     }
 
     // Verificar se tem message
     if (errorResponse.message && typeof errorResponse.message === 'string') {
-      return errorResponse.message;
+      return this.decodeHtmlEntities(errorResponse.message);
     }
 
     // Fallback para mensagem genérica
@@ -48,7 +57,7 @@ export class ApiErrorHandler {
       // Se não conseguir parsear como JSON, tentar como texto
       try {
         const errorText = await response.text();
-        return errorText || `Erro HTTP ${response.status}`;
+        return this.decodeHtmlEntities(errorText) || `Erro HTTP ${response.status}`;
       } catch (textError) {
         // Fallback para status HTTP
         return `Erro HTTP ${response.status}: ${response.statusText}`;
