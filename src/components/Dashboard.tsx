@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import logo from "@/assets/logo.png";
 
 export const Dashboard = () => {
   const {
@@ -171,7 +172,7 @@ export const Dashboard = () => {
   return <div className="pc-container space-y-6 max-w-sm mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center pt-4 mb-6">
-        <img src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" alt="PromoConsig Logo" className="h-12 w-auto" />
+        <img src={logo} alt="PromoConsig Logo" className="h-12 w-auto" />
         
         {/* User Info */}
         <Popover>

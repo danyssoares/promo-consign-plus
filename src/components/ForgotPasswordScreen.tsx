@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import logo from "@/assets/logo.png";
 
 export const ForgotPasswordScreen = ({ onBack }: { onBack: () => void }) => {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export const ForgotPasswordScreen = ({ onBack }: { onBack: () => void }) => {
         <div className="mb-12 text-center">
           <div className="mb-6 flex justify-center">
             <img 
-              src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
+              src={logo} 
               alt="PromoConsig Logo" 
               className="h-16 w-auto"
             />
@@ -44,7 +45,7 @@ export const ForgotPasswordScreen = ({ onBack }: { onBack: () => void }) => {
       <div className="mb-12 text-center">
         <div className="mb-6 flex justify-center">
           <img 
-            src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
+            src={logo} 
             alt="PromoConsig Logo" 
             className="h-16 w-auto"
           />

@@ -6,6 +6,7 @@ import { colaboradorService, MatriculaData } from "@/services/colaboradorService
 import { useToast } from "@/hooks/use-toast";
 import { SelectMatriculaModal } from "@/components/SelectMatriculaModal";
 import { BiometricService } from "@/services/biometricService";
+import logo from "@/assets/logo.png";
 
 export const LoginScreen = ({ onLogin, onForgotPassword }: { 
   onLogin: () => void;
@@ -439,7 +440,7 @@ export const LoginScreen = ({ onLogin, onForgotPassword }: {
       <div className="mb-12 text-center">
         <div className="mb-6 flex justify-center">
           <img 
-            src="/lovable-uploads/93766fc2-0b21-4c6e-a115-810c01c95df1.png" 
+            src={logo} 
             alt="PromoConsig Logo" 
             className="h-16 w-auto"
           />
