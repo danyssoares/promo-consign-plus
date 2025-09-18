@@ -1,10 +1,18 @@
 // Service worker para PromoConsign Plus
 
-const CACHE_NAME = 'promo-consign-plus-v3';
+const CACHE_NAME = 'promo-consign-plus-v4';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json'
+];
+
+// Assets to cache during installation (critical assets only)
+const assetsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/lovable-uploads/optimized-logo.png' // Logo principal otimizado
 ];
 
 self.addEventListener('install', (event) => {
@@ -14,42 +22,52 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Cache aberto');
-        return cache.addAll(urlsToCache);
+        // Only cache critical assets during installation
+        return cache.addAll(assetsToCache);
       })
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  // Estratégia: Network First para API calls, Cache First para assets estáticos
+  // Estratégia otimizada: Stale-while-revalidate para melhor performance
   if (event.request.url.includes('/api/') || event.request.url.includes('azfinisdev.biz')) {
-    // Para APIs, sempre tenta network first
+    // Para APIs, usa Network First com fallback para cache
     event.respondWith(
       fetch(event.request)
         .then((response) => {
+          // Cache successful API responses
+          if (response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
           return response;
         })
-        .catch(() => {
-          return caches.match(event.request);
+        .catch(async () => {
+          // Fallback to cache if network fails
+          const cachedResponse = await caches.match(event.request);
+          return cachedResponse || new Response('Offline', { status: 503 });
         })
     );
   } else {
-    // Para assets estáticos, usa cache com fallback para network
+    // Para assets estáticos, usa Stale-While-Revalidate
     event.respondWith(
-      caches.match(event.request)
-        .then((response) => {
-          if (response) {
-            // Se tem no cache, verifica se é muito antigo (mais de 1 hora)
-            const cacheDate = response.headers.get('date');
-            if (cacheDate) {
-              const age = Date.now() - new Date(cacheDate).getTime();
-              if (age > 3600000) { // 1 hora em ms
-                return fetch(event.request).catch(() => response);
-              }
-            }
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.match(event.request).then((response) => {
+          const fetchPromise = fetch(event.request).then((networkResponse) => {
+            // Update cache with fresh response
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          }).catch(() => {
+            // If network fails, return cached response if available
             return response;
-          }
-          return fetch(event.request);
-        })
+          });
+          
+          // Return cached response immediately if available, otherwise wait for network
+          return response || fetchPromise;
+        });
+      })
     );
   }
 });
