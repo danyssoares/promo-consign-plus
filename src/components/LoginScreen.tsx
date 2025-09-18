@@ -259,6 +259,100 @@ export const LoginScreen = ({
       setIsLoading(false);
     }
   };
+  const continueLoginAfterBiometric = async (userDataResponse: UserData, loginToken: string) => {
+    try {
+      // Step 4: Verificar se o campo documentoFederal existe e não é nulo/vazio
+      const documento = userDataResponse?.pessoaFisica?.pessoa?.documentoFederal;
+      if (documento && documento !== null && documento !== undefined && documento !== '') {
+        // Limpar caracteres especiais do documento
+        const documentoLimpo = documento.replace(/[.\-/]/g, '');
+        setDocumentoFederal(documentoLimpo);
+
+        // Buscar dados do colaborador
+        const matriculas = await colaboradorService.buscarPorMatricula(documentoLimpo, loginToken);
+        if (matriculas) {
+          // Verificar se o colaborador tem matrículas
+          if (matriculas && Array.isArray(matriculas)) {
+            if (matriculas.length === 0) {
+              // Nenhuma matrícula encontrada
+              toast({
+                title: "Nenhuma matrícula encontrada",
+                description: "Não foi possível encontrar matrículas para este colaborador.",
+                variant: "destructive"
+              });
+              setIsLoading(false);
+              return;
+            } else if (matriculas.length === 1) {
+              // Apenas uma matrícula, selecionar automaticamente
+              const matricula = matriculas[0];
+              const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(documentoLimpo, matricula.codigoMatricula, loginToken);
+              if (colaboradorDetalhe) {
+                // Salvar dados do colaborador no contexto
+                setColaborador(colaboradorDetalhe as any);
+
+                // Atualizar o nome do usuário logado
+                const updatedUserData = {
+                  ...userDataResponse,
+                  nome: colaboradorDetalhe.nome
+                };
+                setUsuarioLogado(updatedUserData);
+
+                // Continuar com o fluxo de login
+                await completeLogin(updatedUserData);
+              } else {
+                toast({
+                  title: "Colaborador não encontrado",
+                  description: "Não foi possível encontrar os dados do colaborador.",
+                  variant: "destructive"
+                });
+                setIsLoading(false);
+                return;
+              }
+            } else {
+              // Mais de uma matrícula, abrir modal para seleção
+              const matriculasForModal = matriculas.map(m => ({
+                codigoMatricula: m.codigoMatricula
+              }));
+              setMatriculas(matriculasForModal);
+              setShowMatriculaModal(true);
+              // Não continuar o fluxo ainda, aguardar seleção do usuário
+              return;
+            }
+          } else {
+            // Caso não tenha a propriedade matriculas ou não seja um array
+            toast({
+              title: "Nenhuma matrícula encontrada",
+              description: "Não foi possível encontrar matrículas para este colaborador.",
+              variant: "destructive"
+            });
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          // Colaborador não encontrado
+          toast({
+            title: "Colaborador não encontrado",
+            description: "Não foi possível encontrar os dados do colaborador.",
+            variant: "destructive"
+          });
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        // Se não houver documento federal, continuar com o fluxo normal
+        await completeLogin(userDataResponse);
+      }
+    } catch (error) {
+      console.error('Login continuation error:', error);
+      toast({
+        title: "Erro no login",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
+
   const handleLogin = async () => {
     if (!username || !password) {
       toast({
@@ -301,89 +395,13 @@ export const LoginScreen = ({
       const biometricAlreadyEnabled = await BiometricService.isBiometricEnabled();
       if (biometricAvailable && !biometricAlreadyEnabled) {
         // Mostrar diálogo para perguntar se quer salvar dados para biometria
+        // PARAR O FLUXO AQUI - aguardar resposta do usuário
         setShowBiometricSaveDialog(true);
+        return;
       }
 
-      // Step 4: Verificar se o campo documentoFederal existe e não é nulo/vazio
-      const documento = userDataResponse?.pessoaFisica?.pessoa?.documentoFederal;
-      if (documento && documento !== null && documento !== undefined && documento !== '') {
-        // Limpar caracteres especiais do documento
-        const documentoLimpo = documento.replace(/[.\-/]/g, '');
-        setDocumentoFederal(documentoLimpo);
-
-        // Buscar dados do colaborador
-        const matriculas = await colaboradorService.buscarPorMatricula(documentoLimpo, loginResponse.access_token);
-        if (matriculas) {
-          // Verificar se o colaborador tem matrículas
-          if (matriculas && Array.isArray(matriculas)) {
-            if (matriculas.length === 0) {
-              // Nenhuma matrícula encontrada
-              toast({
-                title: "Nenhuma matrícula encontrada",
-                description: "Não foi possível encontrar matrículas para este colaborador.",
-                variant: "destructive"
-              });
-              setIsLoading(false);
-              return;
-            } else if (matriculas.length === 1) {
-              // Apenas uma matrícula, selecionar automaticamente
-              const matricula = matriculas[0];
-              const colaboradorDetalhe = await colaboradorService.buscarColaboradorPorMatricula(documentoLimpo, matricula.codigoMatricula, loginResponse.access_token);
-              if (colaboradorDetalhe) {
-                // Salvar dados do colaborador no contexto
-                setColaborador(colaboradorDetalhe as any);
-
-                // Atualizar o nome do usuário logado
-                const updatedUserData = {
-                  ...userDataResponse,
-                  nome: colaboradorDetalhe.nome
-                };
-                setUsuarioLogado(updatedUserData);
-
-                // Continuar com o fluxo de login
-                await completeLogin(updatedUserData);
-              } else {
-                toast({
-                  title: "Colaborador não encontrado",
-                  description: "Não foi possível encontrar os dados do colaborador.",
-                  variant: "destructive"
-                });
-                setIsLoading(false);
-                return;
-              }
-              // Mais de uma matrícula, abrir modal para seleção
-              const matriculasForModal = matriculas.map(m => ({
-                codigoMatricula: m.codigoMatricula
-              }));
-              setMatriculas(matriculasForModal);
-              setShowMatriculaModal(true);
-              // Não continuar o fluxo ainda, aguardar seleção do usuário
-              return;
-            }
-          } else {
-            // Caso não tenha a propriedade matriculas ou não seja um array
-            toast({
-              title: "Nenhuma matrícula encontrada",
-              description: "Não foi possível encontrar matrículas para este colaborador.",
-              variant: "destructive"
-            });
-            setIsLoading(false);
-            return;
-          }
-        } else {
-          // Colaborador não encontrado
-          toast({
-            title: "Colaborador não encontrado",
-            description: "Não foi possível encontrar os dados do colaborador.",
-            variant: "destructive"
-          });
-          setIsLoading(false);
-          return;
-        }
-      } else {
-        // Se não houver documento federal, continuar com o fluxo normal
-        await completeLogin(userDataResponse);
-      }
+      // Continuar com o fluxo normal se não mostrou a modal biométrica
+      await continueLoginAfterBiometric(userDataResponse, loginResponse.access_token);
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -412,6 +430,11 @@ export const LoginScreen = ({
           variant: "destructive"
         });
       }
+    }
+    
+    // Continuar o fluxo de login após a escolha da biometria
+    if (userData && authToken) {
+      await continueLoginAfterBiometric(userData, authToken);
     }
   };
   return <div className="min-h-screen bg-background flex flex-col justify-center pc-container max-w-sm mx-auto">
