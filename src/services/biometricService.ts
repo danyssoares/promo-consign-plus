@@ -1,14 +1,16 @@
 import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
+import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import { loginService, UserData } from '@/services/loginService';
 import { colaboradorService } from '@/services/colaboradorService';
 
-// Interface para armazenar credenciais de forma segura
+// Interface para armazenar credenciais de forma segura (fallback web)
 interface BiometricCredentials {
   username: string;
   password: string;
 }
 
-// Chave para armazenamento seguro
+// Chaves para armazenamento
 const BIOMETRIC_CREDENTIALS_KEY = 'biometric_credentials';
 const BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
 
@@ -16,9 +18,13 @@ export class BiometricService {
   // Verifica se a biometria está disponível no dispositivo
   static async isBiometricAvailable(): Promise<boolean> {
     try {
-      // Em um ambiente real com Capacitor, verificaríamos se a biometria está disponível
-      // Por enquanto, simularemos que está disponível em dispositivos móveis
-      return true;
+      const platform = Capacitor.getPlatform();
+      if (platform === 'android' || platform === 'ios') {
+        const { isAvailable } = await NativeBiometric.isAvailable();
+        return !!isAvailable;
+      }
+      // No web tratamos como indisponível
+      return false;
     } catch (error) {
       console.error('Erro ao verificar disponibilidade de biometria:', error);
       return false;
@@ -28,18 +34,27 @@ export class BiometricService {
   // Salva as credenciais para login biométrico
   static async saveCredentials(username: string, password: string): Promise<void> {
     try {
-      // Em um ambiente real, usaríamos um plugin de biometria para salvar de forma segura
-      // Por enquanto, vamos salvar em Preferences com uma implementação básica
-      const credentials: BiometricCredentials = { username, password };
-      await Preferences.set({
-        key: BIOMETRIC_CREDENTIALS_KEY,
-        value: JSON.stringify(credentials)
-      });
-      
+      const platform = Capacitor.getPlatform();
+      if (platform === 'android' || platform === 'ios') {
+        await NativeBiometric.setCredentials({
+          username,
+          password,
+          // Usamos uma "server key" estável para o bundle
+          server: BIOMETRIC_CREDENTIALS_KEY,
+        });
+      } else {
+        // Fallback web (somente para desenvolvimento)
+        const credentials: BiometricCredentials = { username, password };
+        await Preferences.set({
+          key: BIOMETRIC_CREDENTIALS_KEY,
+          value: JSON.stringify(credentials),
+        });
+      }
+
       // Marcar que o login biométrico está habilitado
       await Preferences.set({
         key: BIOMETRIC_ENABLED_KEY,
-        value: 'true'
+        value: 'true',
       });
     } catch (error) {
       console.error('Erro ao salvar credenciais biométricas:', error);
@@ -50,6 +65,16 @@ export class BiometricService {
   // Recupera as credenciais salvas
   static async getCredentials(): Promise<BiometricCredentials | null> {
     try {
+      const platform = Capacitor.getPlatform();
+      if (platform === 'android' || platform === 'ios') {
+        try {
+          const creds = await NativeBiometric.getCredentials({ server: BIOMETRIC_CREDENTIALS_KEY });
+          return { username: creds.username, password: creds.password };
+        } catch {
+          return null;
+        }
+      }
+
       const { value } = await Preferences.get({ key: BIOMETRIC_CREDENTIALS_KEY });
       if (value) {
         return JSON.parse(value) as BiometricCredentials;
@@ -64,6 +89,14 @@ export class BiometricService {
   // Remove as credenciais salvas
   static async removeCredentials(): Promise<void> {
     try {
+      const platform = Capacitor.getPlatform();
+      if (platform === 'android' || platform === 'ios') {
+        try {
+          await NativeBiometric.deleteCredentials({ server: BIOMETRIC_CREDENTIALS_KEY });
+        } catch {
+          // ignorar
+        }
+      }
       await Preferences.remove({ key: BIOMETRIC_CREDENTIALS_KEY });
       await Preferences.remove({ key: BIOMETRIC_ENABLED_KEY });
     } catch (error) {
@@ -94,9 +127,9 @@ export class BiometricService {
   }
 
   // Realiza o login usando credenciais biométricas
-  static async biometricLogin(): Promise<{ 
-    userData: UserData; 
-    authToken: string; 
+  static async biometricLogin(): Promise<{
+    userData: UserData;
+    authToken: string;
     documentoFederal?: string;
     matriculas?: any[];
   } | null> {
@@ -107,26 +140,29 @@ export class BiometricService {
         return null;
       }
 
-      // Recuperar credenciais
+      // Autenticação biométrica nativa (Android/iOS)
+      const platform = Capacitor.getPlatform();
+      if (platform === 'android' || platform === 'ios') {
+        await NativeBiometric.verifyIdentity({
+          reason: 'Confirme sua identidade para fazer login',
+          title: 'Login com Biometria',
+          cancelTitle: 'Cancelar',
+          fallbackTitle: 'Usar senha',
+        });
+      } else {
+        // Sem biometria no web
+        return null;
+      }
+
+      // Recuperar credenciais salvas
       const credentials = await this.getCredentials();
       if (!credentials) {
         return null;
       }
 
-      // Solicitar autenticação biométrica
-      // Em um ambiente real, usaríamos o plugin de biometria
-      // Por enquanto, simularemos com um confirm dialog
-      const userConfirmed = confirm(
-        'Confirme sua identidade para fazer login\n\nUse sua biometria para acessar sua conta'
-      );
-
-      if (!userConfirmed) {
-        throw new Error('Autenticação biométrica cancelada pelo usuário');
-      }
-
       // Realizar login com as credenciais salvas
       const loginResponse = await loginService.getLogin(
-        credentials.username, 
+        credentials.username,
         credentials.password
       );
 
@@ -147,10 +183,10 @@ export class BiometricService {
       if (documento && documento !== null && documento !== undefined && documento !== '') {
         // Limpar caracteres especiais do documento
         documentoFederal = documento.replace(/[.\-/]/g, '');
-        
+
         // Buscar matrículas do colaborador
         const colaboradorData = await colaboradorService.buscarPorMatricula(
-          documentoFederal, 
+          documentoFederal,
           loginResponse.access_token
         );
         matriculas = colaboradorData || [];
@@ -160,15 +196,15 @@ export class BiometricService {
         userData: userDataResponse,
         authToken: loginResponse.access_token,
         documentoFederal,
-        matriculas
+        matriculas,
       };
-      } catch (error) {
-        console.error('Erro no login biométrico:', error);
-        // Remover credenciais inválidas
-        await this.removeCredentials();
-        
-        // Re-lançar o erro original para que a mensagem da API seja preservada
-        throw error;
-      }
+    } catch (error) {
+      console.error('Erro no login biométrico:', error);
+      // Remover credenciais inválidas
+      await this.removeCredentials();
+      // Repassar o erro original
+      throw error;
+    }
   }
 }
+

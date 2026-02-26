@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* PromoConsig Design System - Financial App */
+/* AZConsig Design System - Financial App */
 @layer base {
   :root {
-    /* PromoConsig Brand Colors */
+    /* AZ Consig Brand Colors */
     --pc-blue: 223 64% 34%;           /* #1E4193 - Primary brand blue */
     --pc-gray: 210 8% 33%;            /* #50555A - Secondary gray */
     --pc-yellow: 53 93% 53%;          /* #F7DB14 - Accent yellow */
@@ -105,7 +105,7 @@
   }
 }
 
-/* PromoConsig Custom Components */
+/* AZConsig Custom Components */
 @layer components {
   .pc-card {
     @apply bg-card rounded-xl shadow-[var(--shadow-card)] border border-border p-[var(--card-padding)];

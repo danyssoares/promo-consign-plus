@@ -133,7 +133,7 @@ export const ContractsScreen = ({
           {
             id: "CT789012", 
             nomeTipoRubrica: "Consignado",
-            rubricaNome: "Cartão de Crédito",
+            rubricaNome: "Cartão de Benefício",
             parcelas: 12,
             valorParcelaFormatado: "R$ 420,00",
             total: 5040.00,
@@ -153,7 +153,7 @@ export const ContractsScreen = ({
           {
             id: "CT901234",
             nomeTipoRubrica: "Consignado",
-            rubricaNome: "Cartão de Crédito",
+            rubricaNome: "Cartão de Benefício",
             parcelas: 18,
             valorParcelaFormatado: "R$ 500,00",
             total: 9000.00,

@@ -20,7 +20,7 @@ export const ForgotPasswordScreen = ({ onBack }: { onBack: () => void }) => {
           <div className="mb-6 flex justify-center">
             <img 
               src={logo} 
-              alt="PromoConsig Logo" 
+              alt="AZ Consig Logo" 
               className="h-16 w-auto"
             />
           </div>
@@ -46,7 +46,7 @@ export const ForgotPasswordScreen = ({ onBack }: { onBack: () => void }) => {
         <div className="mb-6 flex justify-center">
           <img 
             src={logo} 
-            alt="PromoConsig Logo" 
+            alt="AZ Consig Logo" 
             className="h-16 w-auto"
           />
         </div>

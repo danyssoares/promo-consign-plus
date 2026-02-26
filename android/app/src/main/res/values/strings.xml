@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">PromoConsignPlus</string>
-    <string name="title_activity_main">PromoConsignPlus</string>
+    <string name="app_name">AZConsig</string>
+    <string name="title_activity_main">AZConsig</string>
     <string name="package_name">com.azfinis.promoconsignplus</string>
     <string name="custom_url_scheme">com.azfinis.promoconsignplus</string>
 </resources>

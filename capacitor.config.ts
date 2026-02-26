@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.azfinis.promoconsignplus',
-  appName: 'PromoConsignPlus',
+  appName: 'AZConsig',
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {

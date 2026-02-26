@@ -172,7 +172,7 @@ export const Dashboard = () => {
   return <div className="pc-container space-y-6 max-w-sm mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center pt-4 mb-6">
-        <img src={logo} alt="PromoConsig Logo" className="h-10 w-auto" />
+        <img src={logo} alt="AZ Consig Logo" className="h-10 w-auto" />
         
         {/* User Info */}
         <Popover>
@@ -264,11 +264,11 @@ export const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Cartão de Crédito Card */}
+        {/* Cartão de Benefício */}
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-700">
-              Cartão de Crédito
+              Cartão de Benefício
             </CardTitle>
             <CreditCard className="h-4 w-4 text-green-600" />
           </CardHeader>

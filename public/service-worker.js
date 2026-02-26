@@ -1,4 +1,4 @@
-// Service worker para PromoConsign Plus
+// Service worker para AZ Consig
 
 const CACHE_NAME = 'promo-consign-plus-v4';
 const urlsToCache = [

@@ -1,6 +1,6 @@
-# PromoConsign Plus - Mobile
+# AZ Consig Plus - Mobile
 
-Este documento fornece instruções para construir e executar o aplicativo PromoConsign Plus em dispositivos móveis Android e iOS.
+Este documento fornece instruções para construir e executar o aplicativo AZ Consig em dispositivos móveis Android e iOS.
 
 ## Pré-requisitos
 
@@ -75,7 +75,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.azfinis.promoconsignplus',
-  appName: 'PromoConsignPlus',
+  appName: 'AZConsig',
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {
